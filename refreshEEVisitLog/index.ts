@@ -12,6 +12,7 @@ async function test(logger:(msg:string)=>void) {
         tenantId:'60387d22-1b13-42a0-8894-208eeafd9e57', //https://portal.azure.com/#home, https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
     }
         
+    logger(JSON.stringify(tenantClientInfo));
     const prm: IMsGraphDirPrms = {        
         logger,
         sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/%E4%B8%89%E7%A6%8F%E6%8E%A2%E8%AE%BF%E8%AE%B0%E5%BD%95.xlsx?d=wf3a17698953344988a206fbe0fecded5&csf=1&web=1&e=sMhg4O',
@@ -23,9 +24,9 @@ async function test(logger:(msg:string)=>void) {
     };    
     logger('getting sheet')
     const sheet = await msGraph.msExcell.getMsExcel(tenantClientInfo, prm, opt);
-    
+    logger('got sheet done, reading sheet1')
     const dataAll = await sheet.readAll('Sheet1');
-    logger('got sheet done')
+    logger('got sheet read sheet 1 done')
     logger(JSON.stringify(dataAll.text));
 
     const summary =dataAll.text.slice(1).reduce((acc, d) => {
