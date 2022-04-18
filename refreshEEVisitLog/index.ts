@@ -34,7 +34,8 @@ async function test(logger:(msg:string)=>void) {
         const std = d[5].split(/[,，]+/);
         const doAdd = (name: string) => {
             name = name.trim();
-            acc[name] = (acc[name] || 0) + 1;
+            if (name)
+                acc[name] = (acc[name] || 0) + 1;
         }
         doAdd(leader);
         std.forEach(doAdd);
