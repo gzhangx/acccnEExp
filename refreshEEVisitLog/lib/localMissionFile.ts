@@ -20,6 +20,7 @@ interface INameBufAttachement {
     buffer: string;
 }
 
+const treatFileName = (path:string)=>path.replace(/[\\"|*<>?]/g, '')
 export type ILogger = (msg:any)=> void;
 export async function getCategories(logger: ILogger): Promise<ILocalCats[]> {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
@@ -116,7 +117,7 @@ async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
     msGrapDirPrms.driveId = msdirOps.driveId;
-    const newFileName = `${today}-${found.name}`;
+    const newFileName = treatFileName(`${today}-${found.name}`);
     const newFileFullPath = `Documents/safehouse/safehouseRecords/${newFileName}.xlsx`;
     const newId = await msdirOps.copyItemByName('Documents/safehouse/empty2022expense.xlsx', newFileFullPath)
     console.log('newFileId is ', newId);
@@ -139,7 +140,10 @@ async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:
     logger('done update range, get file by path ' + newFileFullPath);
     const newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
     logger('got file content');
-    return newFileBuf;
+    return {
+        newFileName,
+        newFileBuf,
+    }
 }
 
 function getGraphDirPrms(logger: ILogger) {
@@ -210,7 +214,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     
 
     logger('processRequestTemplateXlsx');    
-    const newFileBuf = await processRequestTemplateXlsx(submitFileInfo, today, found, logger);
+    const newFileInfo = await processRequestTemplateXlsx(submitFileInfo, today, found, logger);
 
 
 
@@ -249,9 +253,9 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         payee: ${payeeName}
         `,
         attachments: [{
-            fileName: 'expense.xlsx',
+            fileName: newFileInfo.newFileName,
             //path: xlsxFileName,
-            content: newFileBuf,
+            content: newFileInfo.newFileBuf,
             //encoding:'base64',
             contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         }].concat(attachements.map(convertAttachement))
