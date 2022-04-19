@@ -1,7 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import { brotliDecompressSync } from "zlib";
 
-import { submitFile} from '../refreshEEVisitLog/lib/localMissionFile'
+import { submitFile, getCategories} from '../refreshEEVisitLog/lib/localMissionFile'
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
     context.log('HTTP trigger function processed a request.');
     const name = (req.query.name || (req.body && req.body.name));
@@ -27,15 +27,25 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     if (!reqBody.reimbursementCat) {
         return errorRsp('no reimbursementCat');
     }
-    const res = await submitFile({
-        amount: reqBody.amount,
-        description: reqBody.description,
-        logger: msg => context.log(msg),
-        payeeName: reqBody.payeeName,
-        reimbursementCat: reqBody.reimbursementCat,
-        attachements: reqBody.attachements,
-        ccList: reqBody.ccList,
-    })
+
+    let res = null;
+    if (reqBody.action === 'getCats') {
+        res = await getCategories(msg => context.log(msg));
+    } else if (reqBody.action === 'saveFile') {
+        res = await submitFile({
+            amount: reqBody.amount,
+            description: reqBody.description,
+            logger: msg => context.log(msg),
+            payeeName: reqBody.payeeName,
+            reimbursementCat: reqBody.reimbursementCat,
+            attachements: reqBody.attachements,
+            ccList: reqBody.ccList,
+        })
+    } else {
+        res = {
+            message:'bad action'
+        }
+    }
     context.res = {
         // status: 200, /* Defaults to 200 */
         body: res,
