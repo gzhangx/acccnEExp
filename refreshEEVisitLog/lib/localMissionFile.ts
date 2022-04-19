@@ -8,6 +8,7 @@ import {msGraph} from "@gzhangx/googleapi"
 import { IMsGraphCreds, IAuthOpt,IMsGraphDirPrms,IMsGraphExcelItemOpt} from "@gzhangx/googleapi/lib/msGraph/types";
 
 import { getMSClientTenantInfo } from './ms'
+import { emailTransporter, emailUser} from './nodemailer'
 
 interface ILocalCats {
     subCode: string;
@@ -195,7 +196,7 @@ export async function submitFile({
         }
     }
     const message = {
-        from: '"LocalMissionBot" <gzhangx@gmail.com>',
+        from: `"LocalMissionBot" <${emailUser}>`,
         //to: 'hebrewsofacccn@googlegroups.com',  //nodemailer settings, not used here
         to: ['gzhangx@hotmail.com'].concat(ccList||[]),
         subject: `From ${payeeName} for ${found.name} Amount ${amount}`,
@@ -214,6 +215,7 @@ export async function submitFile({
     };
     console.log(`sending email`);
     //await email.sendGmail(message);
+    await emailTransporter.sendMail(message);
     console.log(message);
 }
 
