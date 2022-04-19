@@ -19,7 +19,29 @@ interface INameBufAttachement {
     name: string;
     buffer: string;
 }
-export function getCategories() : ILocalCats[] {
+
+export type ILogger = (msg:any)=> void;
+export async function getCategories(logger: ILogger): Promise<ILocalCats[]> {
+    const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
+    const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {        
+        fileName: 'Documents/safehouse/empty2022expense.xlsx',
+    });
+    const allSheet = await sheetOps.readAll('Table B');
+    const data = allSheet.values;
+    const res: ILocalCats[] = [];
+    for (let i = 24; i <= 35; i++) {
+        const subCode = data[i][6];
+        const expCode = data[i][8];
+        const name = data[i][7];
+        res.push({
+            expCode,
+            name,
+            subCode,
+        })
+        //console.log(`sc=${sc} exp=${exp} subCode=${subCode} expCode=${expCode}`)        
+    }
+    return res;
+    /*
     return `01	1601	Chinese New Year Carnival
     02	1602	Ministry (Music Events, Guest Speaker)
     03	1603	EE Training
@@ -39,6 +61,7 @@ export function getCategories() : ILocalCats[] {
             name: parts[2],
         }
     });
+    */
 }
 
 export interface ISubmitFileInterface{
@@ -48,7 +71,7 @@ export interface ISubmitFileInterface{
     description: string;
     attachements: INameBufAttachement[];
     ccList: string[];
-    logger: (msg: any) => void;
+    logger: ILogger;
 }
 
 function replaceStrUnderlines(orig: string, content: string) {
@@ -61,19 +84,18 @@ function replaceStrUnderlines(orig: string, content: string) {
     return orig.substring(0, firstInd + start) + content + orig.substring(firstInd + start + content.length);
 }
 
-function prepareExpenseSheet(subCode: string, expCode: string,payeeName: string, amount: string, date: string, desc: string, data: string[][]) {
+function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string, date: string, desc: string, data: string[][]) {
     let row = 50;
     row = 3;
     data[row][0] = replaceStrUnderlines(data[row][0], payeeName);
     const AMTPOS = 9;
     for (let i = 24; i <= 35; i++) {
-        const sc = parseInt(data[i][6]);
-        const exp = data[i][8];
-        console.log(`sc=${sc} exp=${exp} subCode=${subCode} expCode=${expCode}`)
-        if (sc === parseInt(subCode) && (exp === expCode || parseInt(exp) === parseInt(expCode)) ) {
-            console.log('found setting')
+        //const sc = parseInt(data[i][6]);
+        //const exp = data[i][8];
+        const cat = data[i][7];
+        //console.log(`sc=${sc} exp=${exp} subCode=${subCode} expCode=${expCode}`)
+        if (cat === found.name ) {            
             data[i][AMTPOS] = amount;
-            console.log(data[i]);
             break;
         }
     }
@@ -89,12 +111,9 @@ function prepareExpenseSheet(subCode: string, expCode: string,payeeName: string,
     data[row][submitDatePos] = replaceStrUnderlines(data[row][submitDatePos], date);
 }
 
-async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: (x:any)=>void) {
+async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: ILogger) {
     logger('fixing file');
-    const msGrapDirPrms: IMsGraphDirPrms = {
-        logger,
-        sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/Documents/safehouse/empty2022expense.xlsx?d=w1a9a3f0fe89a4f9f93314efc910315fd&csf=1&web=1&e=JmqSFc',
-    }
+    const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
     msGrapDirPrms.driveId = msdirOps.driveId;
     const newFileName = `${today}-${found.name}`;
@@ -107,13 +126,21 @@ async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:
     });
     console.log('Reading sheet:Table B');
     const sheetRes = await sheetOps.readAll('Table B')
-    console.log(sheetRes.values);
+    //console.log(sheetRes.values);
     //sheetRes.values[50][0] = 'testtestesfaasdfadfaf';
-    prepareExpenseSheet(found.subCode, found.expCode, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description,sheetRes.values);
+    prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description,sheetRes.values);
     await sheetOps.updateRange('Table B', 'A1', `J${sheetRes.values.length}`, sheetRes.values);
 
     const newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
     return newFileBuf;
+}
+
+function getGraphDirPrms(logger: ILogger) {
+    const msGrapDirPrms: IMsGraphDirPrms = {
+        logger,
+        sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/Documents/safehouse/empty2022expense.xlsx?d=w1a9a3f0fe89a4f9f93314efc910315fd&csf=1&web=1&e=WSHzge',
+    }
+    return msGrapDirPrms;
 }
 export async function submitFile(submitFileInfo: ISubmitFileInterface) {    
     const {
@@ -129,18 +156,10 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     // const AMTX = 1220;
     // const AMTYSTART = 670;
     // const AMTYEND = 977;
-    const AMTCATS = getCategories();
+    const AMTCATS = await getCategories(logger);
     //console.log(AMTCATS);
 
-    const { found, row } = AMTCATS.reduce((acc, cat, pos) => {
-        if (!acc.found) {
-            if (cat.expCode === reimbursementCat || cat.name === reimbursementCat) {
-                acc.found = cat;
-                acc.row = pos + 25;
-            }
-        }
-        return acc;
-    }, {} as {found:ILocalCats, row: number});
+    const found = AMTCATS.find(c => c.name === reimbursementCat);    
     if (!found) {
         const err = { message: `not found ${reimbursementCat} ` };
         console.log(err.message);
@@ -166,10 +185,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     //     .write('./temp/accchForm.jpg'); // save
     
     const YYYY = moment().format('YYYY');
-    const msGrapDirPrms: IMsGraphDirPrms = {
-        logger,
-        sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/Documents/safehouse/expenses.xlsx?d=wa6013afc83f64e6c9096851414d2d6b3&csf=1&web=1&e=3ga7Fb',
-    }
+    const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {
         fileName: 'Documents/safehouse/localMissionRecords.xlsx',
     });
@@ -238,7 +254,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     await emailTransporter.sendMail(message).catch(err => {
         console.log(err);
     })
-    logger(message);
+    //logger(message);
 }
 
 
