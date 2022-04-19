@@ -126,7 +126,7 @@ async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:
     });
     logger('Reading sheet:Table B');
     const sheetRes = await sheetOps.readAll('Table B')
-    logger(sheetRes.values)
+    //logger(sheetRes.values)
     //console.log(sheetRes.values);
     //sheetRes.values[50][0] = 'testtestesfaasdfadfaf';
     logger('prepareExpenseSheet');
@@ -138,6 +138,7 @@ async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:
     await sheetOps.updateRange('Table B', 'A1', `J${sheetRes.values.length}`, sheetRes.values);
     logger('done update range, get file by path ' + newFileFullPath);
     const newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
+    logger('got file content');
     return newFileBuf;
 }
 
