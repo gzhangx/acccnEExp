@@ -251,6 +251,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         expCode: ${found.expCode}
         amount: ${amount}
         payee: ${payeeName}
+        description: ${description}
         `,
         attachments: [{
             fileName: newFileInfo.newFileName,
