@@ -101,7 +101,7 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
     }
     data[48][AMTPOS] = amount;
     row = 50;
-    data[row][0] = replaceStrUnderlines(data[row][0], desc);
+    data[row][0] = replaceStrUnderlines(data[row][0], desc || '');
     row = 51;
     data[row][0] = replaceStrUnderlines(data[row][0], 'Gang');
     const submitDatePos = 7;
