@@ -126,10 +126,13 @@ async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:
     });
     logger('Reading sheet:Table B');
     const sheetRes = await sheetOps.readAll('Table B')
-    logger(sheetRes)
+    logger(sheetRes.values)
     //console.log(sheetRes.values);
     //sheetRes.values[50][0] = 'testtestesfaasdfadfaf';
     logger('prepareExpenseSheet');
+    logger(found)
+    logger(fileInfo)
+    logger(today)
     prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description, sheetRes.values);
     logger('done prepareExpenseSheet, update range');
     await sheetOps.updateRange('Table B', 'A1', `J${sheetRes.values.length}`, sheetRes.values);
