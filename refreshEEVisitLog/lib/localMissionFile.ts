@@ -181,7 +181,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     const today = nowMoment.format('YYYY-MM-DD');
     // console.log(`amtPos=${amtPos} ${today}`);
     // const img = await jimpRead('./files/expenseVoucher.PNG');
-    const useDesc = description || found.name;
+    const useDesc = description;
     // img.print(fnt, 272, 161, payeeName)
     //     .print(fnt, AMTX, amtPos, amount)
     //     .print(fnt, 1227, 1351, amount)
@@ -206,8 +206,8 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     logger(`reading sheet ${sheetName}`);
     const curData = await sheetOps.readAll(sheetName);
     const vals = curData.values.filter(v => v[0]);    
-    vals.push([today, amount, found.subCode, found.expCode, payeeName, useDesc])
-    await sheetOps.updateRange(sheetName, 'A1', `F${vals.length}`, vals);
+    vals.push([today, amount, found.subCode, found.expCode, payeeName, found.name, useDesc])
+    await sheetOps.updateRange(sheetName, 'A1', `G${vals.length}`, vals);
     //await ops.append(`'LM${YYYY}'!A1`,
         //[[today, amount, found.subCode, found.expCode, useDesc, payeeName, today]]);
     logger(`googlesheet appended`);
@@ -249,6 +249,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         Date: ${today}
         subCode: ${found.subCode}
         expCode: ${found.expCode}
+        category: ${found.name}
         amount: ${amount}
         payee: ${payeeName}
         description: ${description}
