@@ -124,8 +124,9 @@ async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:
         itemId: newId,
         //fileName: newFileFullPath,
     });
-    console.log('Reading sheet:Table B');
+    logger('Reading sheet:Table B');
     const sheetRes = await sheetOps.readAll('Table B')
+    logger(sheetRes)
     //console.log(sheetRes.values);
     //sheetRes.values[50][0] = 'testtestesfaasdfadfaf';
     prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description,sheetRes.values);
