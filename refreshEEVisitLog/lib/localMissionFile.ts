@@ -84,7 +84,8 @@ async function generateXlsx(xlsxFileName: string, replaces: { row: number; amoun
 
     const genb64 = await zip.generateAsync({ type: 'base64' });
     console.log(`writting file ${xlsxFileName}`);
-    fs.writeFileSync(xlsxFileName, Buffer.from(genb64, 'base64'))
+    return genb64;
+    //fs.writeFileSync(xlsxFileName, Buffer.from(genb64, 'base64'))
 }
 
 
@@ -95,7 +96,7 @@ export interface ISubmitFileInterface{
     description: string;
     attachements: INameBufAttachement[];
     ccList: string[];
-    logger: (msg: string) => void;
+    logger: (msg: any) => void;
 }
 
 export async function submitFile({
@@ -152,29 +153,25 @@ export async function submitFile({
         logger,
         sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/Documents/safehouse/expenses.xlsx?d=wa6013afc83f64e6c9096851414d2d6b3&csf=1&web=1&e=3ga7Fb',
     }, {
-        fileName: 'Documents/safehouse/expenses.xlsx',
+        fileName: 'Documents/safehouse/localMissionRecords.xlsx',
     });
     const sheetName = nowMoment.format('YYYY');
     logger(`reading sheet ${sheetName}`);
     const curData = await sheetOps.readAll(sheetName);
-    const vals = curData.values.filter(v => v[0]);
-    console.log(vals)
-    console.log(`length ${vals.length}`)
+    const vals = curData.values.filter(v => v[0]);    
     vals.push([today, amount, found.subCode, found.expCode, payeeName, useDesc])
-    console.log(vals)
-    console.log(`length ${vals.length}`)
     await sheetOps.updateRange(sheetName, 'A1', `F${vals.length}`, vals);
     //await ops.append(`'LM${YYYY}'!A1`,
         //[[today, amount, found.subCode, found.expCode, useDesc, payeeName, today]]);
-    console.log(`googlesheet appended`);
-    const xlsxFileName = './temp/accchForm.xlsx';
+    logger(`googlesheet appended`);
+    const xlsxFileName = './temp/acccnForm.xlsx';
 
 
-    await generateXlsx(xlsxFileName, [
+    const xlsxFileB64 = await generateXlsx(xlsxFileName, [
         { row, amount, column: 'J' },
         { row: 49, amount, column: 'J' }
     ], today, payeeName, description );
-    console.log(`file generated`);
+    logger(`file generated`);
     const convertAttachement = (orig:INameBufAttachement) => {
         const origB64 = orig.buffer;
         const indPos = origB64.indexOf(',');
@@ -185,13 +182,14 @@ export async function submitFile({
         if (matched) {
             contentType = matched[1]
         }
-        console.log(orig.name+ " " + contentType);
-        console.log(b64.slice(0, 20));
+        logger(orig.name+ " " + contentType);
+        //logger(b64.slice(0, 20));
         //require('fs').writeFileSync('temp/test.jpg', Buffer.from(b64,'base64'))
         return {
             fileName: orig.name,
             content: Buffer.from(b64, 'base64'),
-            path: '',
+            //path: '',
+            encoding:'',
             contentType,
         }
     }
@@ -209,14 +207,18 @@ export async function submitFile({
         `,
         attachments: [{
             fileName: 'expense.xlsx',
-            path: xlsxFileName,
-            contentType: '',
+            //path: xlsxFileName,
+            content: Buffer.from(xlsxFileB64, 'base64'),
+            //encoding:'base64',
+            contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         }].concat(attachements.map(convertAttachement))
     };
-    console.log(`sending email`);
+    logger(`sending email`);
     //await email.sendGmail(message);
-    await emailTransporter.sendMail(message);
-    console.log(message);
+    await emailTransporter.sendMail(message).catch(err => {
+        console.log(err);
+    })
+    logger(message);
 }
 
 
