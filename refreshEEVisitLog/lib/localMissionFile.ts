@@ -1,5 +1,4 @@
 //const Jimp = require('jimp');
-import * as JSZip from "jszip"
 import * as moment from 'moment-timezone';
 //const email = require('./nodemailer');
 import * as fs from 'fs';
@@ -21,73 +20,26 @@ interface INameBufAttachement {
     buffer: string;
 }
 export function getCategories() : ILocalCats[] {
-    return `1	1600	Chinese New Year Carnival
-2	1602	Ministry (Music Events, Guest Speaker)
-3	1603	EE Training
-5	1604	Organization support
-4	1604A	Local Community Outreach Activity
-6	1604	Family Keepers
-6	1604	Family ministry Seminars (2)
-6	1604	Herald Monthly
-6	1604	美國華福總幹事 General Secretary, CCCOW
-6	1605	Annual Budget Contribute to SECCC Pool of F
-7	1607	Local Medias (Xin Times)
-10	1612	In Town 信望愛 students and scholars Ministr
-11	1611	(福音營)Gospel Camp financial aid`.split('\n').map((l, ind) => {
+    return `01	1601	Chinese New Year Carnival
+    02	1602	Ministry (Music Events, Guest Speaker)
+    03	1603	EE Training
+    05	1604	Organization Support
+    04	1604A	Local Community Outreach Activities
+    06	1606	Family Keepers
+    06	1606	Family ministry Seminars (2)
+    06	1606	Herald Monthly
+    06	1606	美國華福總幹事 General Secretary, CCCOW
+    06	1605	Annual Budget Contribute to SECCC
+    07	1607	Local Medias (Xin Times)
+    10	1612	In Town 信望愛 students and scholars Ministry`.split('\n').map((l, ind) => {
         const parts = l.split('\t');
         return {
-            subCode: parts[0],
+            subCode: parts[0].trim(),
             expCode: parts[1],
             name: parts[2],
         }
     });
 }
-
-async function generateXlsx(xlsxFileName: string, replaces: { row: number; amount: string; column: string; }[], today:string, payeeName:string, description: string) {
-    const zip = new JSZip();
-
-    const z = await zip.loadAsync(fs.readFileSync('./files/ExpenseTemplate.xlsx'));
-
-    const doFileReplace = async (fname: string, repFunc: (str:string)=>string) => {
-        console.log(`Replcing ${fname} `);
-        const origStr = await z.file(fname).async('string');
-        console.log(`Replcing ${fname} ${origStr}`);
-        zip.file(fname, repFunc(origStr));
-    }
-
-    await doFileReplace('xl/worksheets/sheet1.xml', origStr => {                
-        const replaceOne = (acc,rpl) => {
-            const { row, amount, column } = rpl;            
-            console.log('before ' + acc.substr(acc.indexOf(`<c r="${column}${row}`), 40));
-            const r1 = new RegExp(`<c r="${column}${row}" s="44"/>`);
-            const r2 = new RegExp(`<c r="${column}${row}"([ ]*[s|t]="[0-9s]+"[ ]*)*><v>([0-9]+)?</v></c>`);
-
-            const replaceTo = `<c r="${column}${row}" s="44"><v>${amount}</v></c>`;
-            return acc.replace(r1, replaceTo).replace(r2, replaceTo);
-        }
-        return replaces.reduce((acc, rpl) => {            
-            return replaceOne(acc, rpl);
-        }, replaceOne(origStr, {
-            column: 'J',
-            row: 34,
-            amount: '',
-        }));
-    });
-
-    await doFileReplace('xl/sharedStrings.xml', origStr => {
-        origStr = origStr.replace(/_2021-03-17_/g, `_${today}_`);
-        origStr = origStr.replace('<t>Xin Times</t>', `<t>${payeeName}</t>`);
-        origStr = origStr.replace('Payee (in English):           Xin Times', `Payee (in English):           ${payeeName}`);
-        origStr = origStr.replace('<t>Safehouse Service Project - Provide and serve dinner for the homeless on Friday 1/29/2021</t>',`<t>${description}</t>`)
-        return origStr;
-    });
-
-    const genb64 = await zip.generateAsync({ type: 'base64' });
-    console.log(`writting file ${xlsxFileName}`);
-    return genb64;
-    //fs.writeFileSync(xlsxFileName, Buffer.from(genb64, 'base64'))
-}
-
 
 export interface ISubmitFileInterface{
     payeeName: string;
@@ -99,15 +51,80 @@ export interface ISubmitFileInterface{
     logger: (msg: any) => void;
 }
 
-export async function submitFile({
-    payeeName,
-    reimbursementCat,
-    amount,
-    description,
-    attachements = [],
-    ccList,
-    logger,
-}: ISubmitFileInterface) {    
+function replaceStrUnderlines(orig: string, content: string) {
+    let firstInd = orig.indexOf('_');
+    let lastInd = orig.lastIndexOf('_');
+    if (firstInd < 0) return orig + ' ' + content;
+    if (lastInd - firstInd < content.length) return orig.substring(0, firstInd) + content + orig.substring(lastInd + 1);
+
+    let start = Math.round((lastInd - firstInd - content.length) / 2);
+    return orig.substring(0, firstInd + start) + content + orig.substring(firstInd + start + content.length);
+}
+
+function prepareExpenseSheet(subCode: string, expCode: string,payeeName: string, amount: string, date: string, desc: string, data: string[][]) {
+    let row = 50;
+    row = 3;
+    data[row][0] = replaceStrUnderlines(data[row][0], payeeName);
+    const AMTPOS = 9;
+    for (let i = 24; i <= 35; i++) {
+        const sc = parseInt(data[i][6]);
+        const exp = data[i][8];
+        console.log(`sc=${sc} exp=${exp} subCode=${subCode} expCode=${expCode}`)
+        if (sc === parseInt(subCode) && (exp === expCode || parseInt(exp) === parseInt(expCode)) ) {
+            console.log('found setting')
+            data[i][AMTPOS] = amount;
+            console.log(data[i]);
+            break;
+        }
+    }
+    data[48][AMTPOS] = amount;
+    row = 50;
+    data[row][0] = replaceStrUnderlines(data[row][0], desc);
+    row = 51;
+    data[row][0] = replaceStrUnderlines(data[row][0], 'Gang');
+    const submitDatePos = 7;
+    data[row][submitDatePos] = replaceStrUnderlines(data[row][submitDatePos], date);
+    row = 53;
+    data[row][0] = replaceStrUnderlines(data[row][0], 'Gang');
+    data[row][submitDatePos] = replaceStrUnderlines(data[row][submitDatePos], date);
+}
+
+async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: (x:any)=>void) {
+    logger('fixing file');
+    const msGrapDirPrms: IMsGraphDirPrms = {
+        logger,
+        sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/Documents/safehouse/empty2022expense.xlsx?d=w1a9a3f0fe89a4f9f93314efc910315fd&csf=1&web=1&e=JmqSFc',
+    }
+    const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
+    msGrapDirPrms.driveId = msdirOps.driveId;
+    const newFileName = `${today}-${found.name}`;
+    const newFileFullPath = `Documents/safehouse/safehouseRecords/${newFileName}.xlsx`;
+    const newId = await msdirOps.copyItemByName('Documents/safehouse/empty2022expense.xlsx', newFileFullPath)
+    console.log('newFileId is ', newId);
+    const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {
+        itemId: newId,
+        //fileName: newFileFullPath,
+    });
+    console.log('Reading sheet:Table B');
+    const sheetRes = await sheetOps.readAll('Table B')
+    console.log(sheetRes.values);
+    //sheetRes.values[50][0] = 'testtestesfaasdfadfaf';
+    prepareExpenseSheet(found.subCode, found.expCode, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description,sheetRes.values);
+    await sheetOps.updateRange('Table B', 'A1', `J${sheetRes.values.length}`, sheetRes.values);
+
+    const newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
+    return newFileBuf;
+}
+export async function submitFile(submitFileInfo: ISubmitFileInterface) {    
+    const {
+        payeeName,
+        reimbursementCat,
+        amount,
+        description,
+        attachements = [],
+        ccList,
+        logger,
+    } = submitFileInfo;
     // const fnt = await Jimp.loadFont(Jimp.FONT_SANS_12_BLACK);
     // const AMTX = 1220;
     // const AMTYSTART = 670;
@@ -149,12 +166,15 @@ export async function submitFile({
     //     .write('./temp/accchForm.jpg'); // save
     
     const YYYY = moment().format('YYYY');
-    const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), {
+    const msGrapDirPrms: IMsGraphDirPrms = {
         logger,
         sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/Documents/safehouse/expenses.xlsx?d=wa6013afc83f64e6c9096851414d2d6b3&csf=1&web=1&e=3ga7Fb',
-    }, {
+    }
+    const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {
         fileName: 'Documents/safehouse/localMissionRecords.xlsx',
     });
+
+
     const sheetName = nowMoment.format('YYYY');
     logger(`reading sheet ${sheetName}`);
     const curData = await sheetOps.readAll(sheetName);
@@ -164,13 +184,13 @@ export async function submitFile({
     //await ops.append(`'LM${YYYY}'!A1`,
         //[[today, amount, found.subCode, found.expCode, useDesc, payeeName, today]]);
     logger(`googlesheet appended`);
-    const xlsxFileName = './temp/acccnForm.xlsx';
+    
+
+    logger('processRequestTemplateXlsx');    
+    const newFileBuf = await processRequestTemplateXlsx(submitFileInfo, today, found, logger);
 
 
-    const xlsxFileB64 = await generateXlsx(xlsxFileName, [
-        { row, amount, column: 'J' },
-        { row: 49, amount, column: 'J' }
-    ], today, payeeName, description );
+
     logger(`file generated`);
     const convertAttachement = (orig:INameBufAttachement) => {
         const origB64 = orig.buffer;
@@ -208,7 +228,7 @@ export async function submitFile({
         attachments: [{
             fileName: 'expense.xlsx',
             //path: xlsxFileName,
-            content: Buffer.from(xlsxFileB64, 'base64'),
+            content: newFileBuf,
             //encoding:'base64',
             contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         }].concat(attachements.map(convertAttachement))

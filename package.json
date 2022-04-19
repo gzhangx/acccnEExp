@@ -10,8 +10,7 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
-    "@gzhangx/googleapi": "^0.0.12",
-    "jszip": "^3.9.1",
+    "@gzhangx/googleapi": "^0.0.13",
     "moment-timezone": "^0.5.34",
     "nodemailer": "^6.7.3"
   },

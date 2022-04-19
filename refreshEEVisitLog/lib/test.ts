@@ -3,7 +3,7 @@ import { submitFile } from './localMissionFile'
 
 submitFile({
     payeeName: 'testpayeeName',
-    amount: '0.001',
+    amount: '0.01',
     description: 'testdesc',
     logger: msg => console.log(msg),
     reimbursementCat: 'Chinese New Year Carnival',
