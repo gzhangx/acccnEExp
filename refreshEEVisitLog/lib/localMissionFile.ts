@@ -129,9 +129,11 @@ async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:
     logger(sheetRes)
     //console.log(sheetRes.values);
     //sheetRes.values[50][0] = 'testtestesfaasdfadfaf';
-    prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description,sheetRes.values);
+    logger('prepareExpenseSheet');
+    prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description, sheetRes.values);
+    logger('done prepareExpenseSheet, update range');
     await sheetOps.updateRange('Table B', 'A1', `J${sheetRes.values.length}`, sheetRes.values);
-
+    logger('done update range, get file by path ' + newFileFullPath);
     const newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
     return newFileBuf;
 }
