@@ -112,13 +112,14 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
     data[row][submitDatePos] = replaceStrUnderlines(data[row][submitDatePos], date);
 }
 
+const SAVE_DOC_ROOT = 'Documents/safehouse/safehouseRecords';
 async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: ILogger) {
     logger('fixing file');
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
     msGrapDirPrms.driveId = msdirOps.driveId;
     const newFileName = treatFileName(`${today}-${found.name}`);
-    const newFileFullPath = `Documents/safehouse/safehouseRecords/${newFileName}.xlsx`;
+    const newFileFullPath = `${SAVE_DOC_ROOT}/${newFileName}.xlsx`;
     const newId = await msdirOps.copyItemByName('Documents/safehouse/empty2022expense.xlsx', newFileFullPath)
     console.log('newFileId is ', newId);
     const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {
@@ -143,6 +144,7 @@ async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:
     return {
         newFileName,
         newFileBuf,
+        msdirOps,
     }
 }
 
@@ -273,6 +275,12 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
             contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         }].concat(attachements.map(convertAttachement))
     };
+    for (let i = 0; i < message.attachments.length; i++) {
+        const att = message.attachments[i];
+        const saveFn = `${SAVE_DOC_ROOT}/${att.fileName.replace(/[\/\\?*|<>!:]/g, '')}`;
+        logger(`Saving ${saveFn}`);
+        await newFileInfo.msdirOps.createFile(saveFn, att.content);
+    }
     logger(`sending email`);
     //await email.sendGmail(message);
     const sendEmailRes = await emailTransporter.sendMail(message).catch(err => {
