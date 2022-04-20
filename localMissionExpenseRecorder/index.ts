@@ -17,21 +17,21 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             },
         };
     }
-    const reqBody = req.body;
-    if (!reqBody.amount) {
-        return errorRsp('no amount');
-    }    
-    if (!reqBody.payeeName) {
-        return errorRsp('no payeeName');
-    }
-    if (!reqBody.reimbursementCat) {
-        return errorRsp('no reimbursementCat');
-    }
-
+    const reqBody = req.body;    
     let res = null;
     if (reqBody.action === 'getCats') {
         res = await getCategories(msg => context.log(msg));
     } else if (reqBody.action === 'saveFile') {
+        if (!reqBody.amount) {
+            return errorRsp('no amount');
+        }    
+        if (!reqBody.payeeName) {
+            return errorRsp('no payeeName');
+        }
+        if (!reqBody.reimbursementCat) {
+            return errorRsp('no reimbursementCat');
+        }
+    
         res = await submitFile({
             amount: reqBody.amount,
             description: reqBody.description,
