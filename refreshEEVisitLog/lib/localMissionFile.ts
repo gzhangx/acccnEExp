@@ -277,7 +277,12 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     };
     for (let i = 0; i < message.attachments.length; i++) {
         const att = message.attachments[i];
-        const saveFn = `${SAVE_DOC_ROOT}/${att.fileName.replace(/[\/\\?*|<>!:]/g, '')}`;
+        const sepInd = att.fileName.replace(/\\/g, '/').lastIndexOf('/');
+        let filename = att.fileName;
+        if (sepInd > 0) {
+            filename = filename.substring(sepInd);
+        }
+        const saveFn = `${SAVE_DOC_ROOT}/${newFileInfo.newFileName}-${treatFileName(filename)}`;
         logger(`Saving ${saveFn}`);
         await newFileInfo.msdirOps.createFile(saveFn, att.content);
     }
