@@ -40,6 +40,11 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             reimbursementCat: reqBody.reimbursementCat,
             attachements: reqBody.attachements,
             ccList: reqBody.ccList,
+        }).catch(err => {
+            res = {
+                error: err,
+            }
+            context.log(err);
         })
     } else {
         res = {

@@ -11,5 +11,6 @@ submitFile({
     ccList:[],
 }).catch(err => {
     console.log(err);
-    console.log(err.response.data)
+    console.log(err.stack)
+    console.log(err.response?err.response.data:err.message)
 })
