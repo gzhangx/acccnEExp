@@ -8,6 +8,7 @@ import { IMsGraphCreds, IAuthOpt,IMsGraphDirPrms,IMsGraphExcelItemOpt} from "@gz
 
 import { getMSClientTenantInfo } from './ms'
 import { emailTransporter, emailUser} from './nodemailer'
+import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
 
 interface ILocalCats {
     subCode: string;
@@ -20,7 +21,7 @@ interface INameBufAttachement {
     buffer: string;
 }
 
-const treatFileName = (path:string)=>path.replace(/[\\"|*<>?]/g, '')
+const treatFileName = (path:string)=>path.replace(/[\\"|*<>?]/g, '').trim()
 export type ILogger = (msg:any)=> void;
 export async function getCategories(logger: ILogger): Promise<ILocalCats[]> {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
@@ -113,12 +114,12 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
 }
 
 const SAVE_DOC_ROOT = 'Documents/safehouse/safehouseRecords';
-async function processRequestTemplateXlsx(fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: ILogger) {
+async function processRequestTemplateXlsx(msdirOps:IMsDirOps, newFileName: string, fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: ILogger) {
     logger('fixing file');
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
-    const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
+    //const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
     msGrapDirPrms.driveId = msdirOps.driveId;
-    const newFileName = treatFileName(`${today}-${found.name}`);
+    //const newFileName = treatFileName(`${today}-${found.name}`);
     const newFileFullPath = `${SAVE_DOC_ROOT}/${newFileName}.xlsx`;
     const newId = await msdirOps.copyItemByName('Documents/safehouse/empty2022expense.xlsx', newFileFullPath)
     console.log('newFileId is ', newId);
@@ -209,7 +210,45 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     const curData = await sheetOps.readAll(sheetName);
     const vals = curData.values.filter(v => v[0]);    
     const files = (attachements || []).map(a => a.name).join(',');
-    vals.push([today, amount, found.subCode, found.expCode, payeeName, useDesc,found.name, files]);
+
+    const convertAttachement = (orig: INameBufAttachement) => {
+        const origB64 = orig.buffer;
+        const indPos = origB64.indexOf(',');
+        const b64 = indPos >= 0 ? origB64.slice(indPos + 1) : origB64;
+        //data:image/jpeg;base64,
+        const matched = origB64.match(/data:(.+);base64,/);
+        let contentType = '';
+        if (matched) {
+            contentType = matched[1]
+        }
+        logger(orig.name + " " + contentType);
+        //logger(b64.slice(0, 20));
+        //require('fs').writeFileSync('temp/test.jpg', Buffer.from(b64,'base64'))
+        return {
+            fileName: orig.name,
+            content: Buffer.from(b64, 'base64'),
+            //path: '',
+            encoding: '',
+            contentType,
+        }
+    }
+    const msgAttachements = attachements.map(convertAttachement);
+    const newFileName = treatFileName(`${today}-${found.name}`);
+    const actualNames = [];
+    const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
+    for (let i = 0; i < msgAttachements.length; i++) {
+        const att = msgAttachements[i];
+        const sepInd = att.fileName.replace(/\\/g, '/').lastIndexOf('/');
+        let filename = att.fileName;
+        if (sepInd > 0) {
+            filename = filename.substring(sepInd);
+        }
+        const saveFn = `${SAVE_DOC_ROOT}/${newFileName}-${treatFileName(filename)}`;
+        logger(`Saving ${saveFn}`);
+        actualNames.push(saveFn);
+        await msdirOps.createFile(saveFn, att.content);
+    }
+    vals.push([today, amount, found.subCode, found.expCode, payeeName, useDesc, found.name, actualNames.join(','),files]);
     vals.forEach((vs,ind) => {
         if (vs.length === 8) return;
         while (vs.length < 8) {
@@ -227,32 +266,12 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     
 
     logger('processRequestTemplateXlsx');    
-    const newFileInfo = await processRequestTemplateXlsx(submitFileInfo, today, found, logger);
+    const newFileInfo = await processRequestTemplateXlsx(msdirOps, newFileName, submitFileInfo, today, found, logger);
 
 
 
     logger(`file generated`);
-    const convertAttachement = (orig:INameBufAttachement) => {
-        const origB64 = orig.buffer;
-        const indPos = origB64.indexOf(',');
-        const b64 = indPos >= 0 ? origB64.slice(indPos + 1) : origB64;
-        //data:image/jpeg;base64,
-        const matched = origB64.match(/data:(.+);base64,/);
-        let contentType = '';
-        if (matched) {
-            contentType = matched[1]
-        }
-        logger(orig.name+ " " + contentType);
-        //logger(b64.slice(0, 20));
-        //require('fs').writeFileSync('temp/test.jpg', Buffer.from(b64,'base64'))
-        return {
-            fileName: orig.name,
-            content: Buffer.from(b64, 'base64'),
-            //path: '',
-            encoding:'',
-            contentType,
-        }
-    }
+    
     const message = {
         from: `"LocalMissionBot" <${emailUser}>`,
         //to: 'hebrewsofacccn@googlegroups.com',  //nodemailer settings, not used here
@@ -273,19 +292,8 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
             content: newFileInfo.newFileBuf,
             //encoding:'base64',
             contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        }].concat(attachements.map(convertAttachement))
-    };
-    for (let i = 0; i < message.attachments.length; i++) {
-        const att = message.attachments[i];
-        const sepInd = att.fileName.replace(/\\/g, '/').lastIndexOf('/');
-        let filename = att.fileName;
-        if (sepInd > 0) {
-            filename = filename.substring(sepInd);
-        }
-        const saveFn = `${SAVE_DOC_ROOT}/${newFileInfo.newFileName}-${treatFileName(filename)}`;
-        logger(`Saving ${saveFn}`);
-        await newFileInfo.msdirOps.createFile(saveFn, att.content);
-    }
+        }].concat(msgAttachements)
+    };    
     logger(`sending email`);
     //await email.sendGmail(message);
     const sendEmailRes = await emailTransporter.sendMail(message).catch(err => {
