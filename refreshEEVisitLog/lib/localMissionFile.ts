@@ -278,8 +278,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     const sendEmailRes = await emailTransporter.sendMail(message).catch(err => {
         logger(err);
         return {
-            message: err.message,
-            error: err,
+            error: err.message,
         }
     });
     return sendEmailRes;
