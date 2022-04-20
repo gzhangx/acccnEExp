@@ -248,18 +248,20 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         actualNames.push(saveFn);
         await msdirOps.createFile(saveFn, att.content);
     }
-    vals.push([today, amount, found.subCode, found.expCode, payeeName, useDesc, found.name, actualNames.join(','),files]);
-    vals.forEach((vs,ind) => {
-        if (vs.length === 8) return;
-        while (vs.length < 8) {
+    const newRow = [today, amount, found.subCode, found.expCode, payeeName, useDesc, found.name, actualNames.join(','), files];
+    vals.push(newRow);
+    vals.forEach((vs, ind) => {
+        if (vs.length === newRow.length) return;
+        while (vs.length < newRow.length) {
             vs.push('');
         }
-        if (vs.length > 8) {
-            vs = vs.slice(0, 8);
+        if (vs.length > newRow.length) {
+            vs = vs.slice(0, newRow.length);
             vals[ind] = vs;
         }
-    })
-    await sheetOps.updateRange(sheetName, 'A1', `H${vals.length}`, vals);
+    });
+    const colNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
+    await sheetOps.updateRange(sheetName, 'A1', `${colNames[newRow.length]}${vals.length}`, vals);
     //await ops.append(`'LM${YYYY}'!A1`,
         //[[today, amount, found.subCode, found.expCode, useDesc, payeeName, today]]);
     logger(`googlesheet appended`);
