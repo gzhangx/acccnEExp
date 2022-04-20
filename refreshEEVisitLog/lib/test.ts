@@ -1,11 +1,11 @@
-import { submitFile } from './localMissionFile'
+import { submitFile, resubmitLine } from './localMissionFile'
 
-
+const logger = msg => console.log(msg);
 submitFile({
     payeeName: 'testpayeeName',
     amount: '0.01',
     description: 'testdesc',
-    logger: msg => console.log(msg),
+    logger,
     reimbursementCat: 'Chinese New Year Carnival',
     attachements: [],
     ccList:[],
@@ -13,4 +13,7 @@ submitFile({
     console.log(err);
     console.log(err.stack)
     console.log(err.response?err.response.data:err.message)
+}).then(() => {
+    console.log('sending 16');
+    return resubmitLine(17, logger);
 })

@@ -114,13 +114,13 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
 }
 
 const SAVE_DOC_ROOT = 'Documents/safehouse/safehouseRecords';
-async function processRequestTemplateXlsx(msdirOps:IMsDirOps, newFileName: string, fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: ILogger) {
+async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: string, fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: ILogger) {
     logger('fixing file');
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     //const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
     msGrapDirPrms.driveId = msdirOps.driveId;
     //const newFileName = treatFileName(`${today}-${found.name}`);
-    const newFileFullPath = `${SAVE_DOC_ROOT}/${newFileName}.xlsx`;
+    
     const newId = await msdirOps.copyItemByName('Documents/safehouse/empty2022expense.xlsx', newFileFullPath)
     console.log('newFileId is ', newId);
     const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {
@@ -143,7 +143,6 @@ async function processRequestTemplateXlsx(msdirOps:IMsDirOps, newFileName: strin
     const newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
     logger('got file content');
     return {
-        newFileName,
         newFileBuf,
         msdirOps,
     }
@@ -234,6 +233,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     }
     const msgAttachements = attachements.map(convertAttachement);
     const newFileName = treatFileName(`${today}-${found.name}`);
+    const newFileFullPath = `${SAVE_DOC_ROOT}/${newFileName}.xlsx`;
     const actualNames = [];
     const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
     for (let i = 0; i < msgAttachements.length; i++) {
@@ -248,7 +248,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         actualNames.push(saveFn);
         await msdirOps.createFile(saveFn, att.content);
     }
-    const newRow = [today, amount, found.subCode, found.expCode, payeeName, useDesc, found.name, actualNames.join(','), files];
+    const newRow = [today, amount, found.subCode, found.expCode, payeeName, useDesc, found.name, newFileFullPath, actualNames.join(','), files];
     vals.push(newRow);
     vals.forEach((vs, ind) => {
         if (vs.length === newRow.length) return;
@@ -261,15 +261,15 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         }
     });
     
-    const colNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
-    await sheetOps.updateRange(sheetName, 'A1', `${colNames[newRow.length-1]}${vals.length}`, vals);
+    const toColName = (ind: number) => String.fromCharCode('A'.charCodeAt(0) + ind);
+    await sheetOps.updateRange(sheetName, 'A1', `${toColName(newRow.length-1)}${vals.length}`, vals);
     //await ops.append(`'LM${YYYY}'!A1`,
         //[[today, amount, found.subCode, found.expCode, useDesc, payeeName, today]]);
     logger(`googlesheet appended`);
     
 
     logger('processRequestTemplateXlsx');    
-    const newFileInfo = await processRequestTemplateXlsx(msdirOps, newFileName, submitFileInfo, today, found, logger);
+    const newFileInfo = await processRequestTemplateXlsx(msdirOps, newFileFullPath, submitFileInfo, today, found, logger);
 
 
 
@@ -290,7 +290,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         description: ${description}
         `,
         attachments: [{
-            fileName: newFileInfo.newFileName,
+            fileName: newFileName,
             //path: xlsxFileName,
             content: newFileInfo.newFileBuf,
             //encoding:'base64',
@@ -309,7 +309,61 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
 }
 
 
-module.exports = {
-    getCategories,
-    submitFile,
+async function pmap<T, U>(items: T[], action: (data: T) => Promise<U>) {
+    if (!items) return null;
+    const res: U[] = [];
+    for (let i = 0; i < items.length; i++) {
+        res.push(await action(items[i]));
+    }
+    return res;
 }
+
+export async function resubmitLine(lineNum: number, logger: ILogger) {
+    const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
+    const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {
+        fileName: 'Documents/safehouse/localMissionRecords.xlsx',
+    });
+    const YYYY = moment().format('YYYY');
+    const allSheet = await sheetOps.readAll(YYYY);
+    const datas = allSheet.values;
+    const [today, amount, subCode, expCode, payeeName, description, category, sheetName, filesByComma] = datas[lineNum];
+    const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
+
+    const imgAttachements = await pmap(filesByComma.split(',').filter(x => x), async fileName => {
+        return {
+            fileName,
+            content: await msdirOps.getFileByPath(fileName),
+            contentType:'',
+        }
+    })
+    const message = {
+        from: `"LocalMissionBot" <${emailUser}>`,
+        //to: 'hebrewsofacccn@googlegroups.com',  //nodemailer settings, not used here
+        to: ['gzhangx@hotmail.com'],
+        subject: `From ${payeeName} for ${category} Amount ${amount}`,
+        text: `
+        Date: ${today}
+        subCode: ${subCode}
+        expCode: ${expCode}
+        category: ${category}
+        amount: ${amount}
+        payee: ${payeeName}
+        description: ${description}
+        `,
+        attachments: [{
+            fileName: sheetName,
+            //path: xlsxFileName,
+            content: await msdirOps.getFileByPath(sheetName),
+            //encoding:'base64',
+            contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }].concat(imgAttachements)
+    };
+    const sendEmailRes = await emailTransporter.sendMail(message).catch(err => {
+        logger(err);
+        return {
+            error: err.message,
+        }
+    });
+    return sendEmailRes;
+}
+
