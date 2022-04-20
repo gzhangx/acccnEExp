@@ -38,7 +38,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             logger: msg => context.log(msg),
             payeeName: reqBody.payeeName,
             reimbursementCat: reqBody.reimbursementCat,
-            attachements: reqBody.attachements,
+            attachements: reqBody.attachements || [],
             ccList: reqBody.ccList,
         }).catch(err => {
             context.log(`error happened in submitFile`, err);

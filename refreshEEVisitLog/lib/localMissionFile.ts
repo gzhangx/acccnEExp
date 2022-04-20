@@ -275,13 +275,14 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     };
     logger(`sending email`);
     //await email.sendGmail(message);
-    await emailTransporter.sendMail(message).catch(err => {
+    const sendEmailRes = await emailTransporter.sendMail(message).catch(err => {
         logger(err);
-    })
-    return {
-        message:'done'
-    }
-    //logger(message);
+        return {
+            message: err.message,
+            error: err,
+        }
+    });
+    return sendEmailRes;
 }
 
 
