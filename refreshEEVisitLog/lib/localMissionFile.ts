@@ -260,8 +260,9 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
             vals[ind] = vs;
         }
     });
+    
     const colNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
-    await sheetOps.updateRange(sheetName, 'A1', `${colNames[newRow.length]}${vals.length}`, vals);
+    await sheetOps.updateRange(sheetName, 'A1', `${colNames[newRow.length-1]}${vals.length}`, vals);
     //await ops.append(`'LM${YYYY}'!A1`,
         //[[today, amount, found.subCode, found.expCode, useDesc, payeeName, today]]);
     logger(`googlesheet appended`);
