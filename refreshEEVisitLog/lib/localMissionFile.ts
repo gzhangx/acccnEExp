@@ -206,8 +206,19 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     logger(`reading sheet ${sheetName}`);
     const curData = await sheetOps.readAll(sheetName);
     const vals = curData.values.filter(v => v[0]);    
-    vals.push([today, amount, found.subCode, found.expCode, payeeName, found.name, useDesc])
-    await sheetOps.updateRange(sheetName, 'A1', `G${vals.length}`, vals);
+    const files = (attachements || []).map(a => a.name).join(',');
+    vals.push([today, amount, found.subCode, found.expCode, payeeName, useDesc,found.name, files]);
+    vals.forEach((vs,ind) => {
+        if (vs.length === 8) return;
+        while (vs.length < 8) {
+            vs.push('');
+        }
+        if (vs.length > 8) {
+            vs = vs.slice(0, 8);
+            vals[ind] = vs;
+        }
+    })
+    await sheetOps.updateRange(sheetName, 'A1', `H${vals.length}`, vals);
     //await ops.append(`'LM${YYYY}'!A1`,
         //[[today, amount, found.subCode, found.expCode, useDesc, payeeName, today]]);
     logger(`googlesheet appended`);
