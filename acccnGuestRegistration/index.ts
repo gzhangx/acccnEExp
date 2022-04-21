@@ -2,7 +2,7 @@ import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import { msGraph } from "@gzhangx/googleapi"
 import { IMsGraphCreds, IAuthOpt, IMsGraphDirPrms, IMsGraphExcelItemOpt } from "@gzhangx/googleapi/lib/msGraph/types";
 
-import { getMSClientTenantInfo } from '../refreshEEVisitLog/lib/ms'
+import { getMsDirClientPrms } from '../refreshEEVisitLog/lib/ms'
 import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
 import * as moment from 'moment-timezone'
 
@@ -24,15 +24,13 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     }
     //await store.getAllDataNoCache();
     let responseMessage = null;
-    const msGraphPrms: IMsGraphDirPrms = {
-        logger: msg => context.log(msg),
-        sharedUrl: 'https://acccnusa.sharepoint.com/:x:/r/sites/newcomer/Shared%20Documents/%E6%96%B0%E4%BA%BA%E8%B5%84%E6%96%99/%E6%96%B0%E4%BA%BA%E8%B5%84%E6%96%99%E8%A1%A8%E6%B1%87%E6%80%BBnew.xlsx?d=wbd57c301f851467787c3b5405709c2bf&csf=1&web=1&e=HDYYri',
-    };
+    const msGraphPrms: IMsGraphDirPrms = getMsDirClientPrms('https://acccnusa.sharepoint.com/:x:/r/sites/newcomer/Shared%20Documents/%E6%96%B0%E4%BA%BA%E8%B5%84%E6%96%99/%E6%96%B0%E4%BA%BA%E8%B5%84%E6%96%99%E8%A1%A8%E6%B1%87%E6%80%BBnew.xlsx?d=wbd57c301f851467787c3b5405709c2bf&csf=1&web=1&e=HDYYri',
+        context.log);    
     async function getMsDirOpt() {        
-        const ops = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGraphPrms);
+        const ops = await msGraph.msdir.getMsDir(msGraphPrms);
         return ops;
     }
-    const xlsOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGraphPrms, {
+    const xlsOps = await msGraph.msExcell.getMsExcel(msGraphPrms, {
         fileName: '新人资料表汇总new.xlsx'
     });    
     const today = moment().format('YYYY-MM-DD');

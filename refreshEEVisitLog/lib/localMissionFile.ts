@@ -5,7 +5,7 @@ import * as fs from 'fs';
 //const { fstat } = require('fs');
 import {msGraph} from "@gzhangx/googleapi"
 import { IMsGraphCreds, IAuthOpt,IMsGraphDirPrms,IMsGraphExcelItemOpt} from "@gzhangx/googleapi/lib/msGraph/types";
-
+import { ILogger } from '@gzhangx/googleapi/lib/msGraph/msauth';
 import { getMSClientTenantInfo } from './ms'
 import { emailTransporter, emailUser} from './nodemailer'
 import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
@@ -22,10 +22,9 @@ interface INameBufAttachement {
 }
 
 const treatFileName = (path:string)=>path.replace(/[\\"|*<>?]/g, '').trim()
-export type ILogger = (msg:any)=> void;
 export async function getCategories(logger: ILogger): Promise<ILocalCats[]> {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
-    const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {        
+    const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {        
         fileName: 'Documents/safehouse/empty2022expense.xlsx',
     });
     const allSheet = await sheetOps.readAll('Table B');
@@ -123,7 +122,7 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
     
     const newId = await msdirOps.copyItemByName('Documents/safehouse/empty2022expense.xlsx', newFileFullPath)
     console.log('newFileId is ', newId);
-    const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {
+    const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
         itemId: newId,
         //fileName: newFileFullPath,
     });
@@ -150,7 +149,10 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
 
 function getGraphDirPrms(logger: ILogger) {
     const msGrapDirPrms: IMsGraphDirPrms = {
-        logger,
+        creds: {
+            logger,
+            tenantClientInfo: getMSClientTenantInfo(),
+        },
         sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/Documents/safehouse/empty2022expense.xlsx?d=w1a9a3f0fe89a4f9f93314efc910315fd&csf=1&web=1&e=WSHzge',
     }
     return msGrapDirPrms;
@@ -199,7 +201,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     
     const YYYY = moment().format('YYYY');
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
-    const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {
+    const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
         fileName: 'Documents/safehouse/localMissionRecords.xlsx',
     });
 
@@ -235,7 +237,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     const newFileName = treatFileName(`${today}-${found.name}`);
     const newFileFullPath = `${SAVE_DOC_ROOT}/${newFileName}.xlsx`;
     const actualNames = [];
-    const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
+    const msdirOps = await msGraph.msdir.getMsDir(msGrapDirPrms);
     for (let i = 0; i < msgAttachements.length; i++) {
         const att = msgAttachements[i];
         const sepInd = att.fileName.replace(/\\/g, '/').lastIndexOf('/');
@@ -320,14 +322,14 @@ async function pmap<T, U>(items: T[], action: (data: T) => Promise<U>) {
 
 export async function resubmitLine(lineNum: number, logger: ILogger) {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
-    const sheetOps = await msGraph.msExcell.getMsExcel(getMSClientTenantInfo(), msGrapDirPrms, {
+    const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
         fileName: 'Documents/safehouse/localMissionRecords.xlsx',
     });
     const YYYY = moment().format('YYYY');
     const allSheet = await sheetOps.readAll(YYYY);
     const datas = allSheet.values;
     const [today, amount, subCode, expCode, payeeName, description, category, sheetName, filesByComma] = datas[lineNum];
-    const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
+    const msdirOps = await msGraph.msdir.getMsDir(msGrapDirPrms);
 
     const imgAttachements = await pmap(filesByComma.split(',').filter(x => x), async fileName => {
         return {

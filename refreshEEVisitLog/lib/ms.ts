@@ -1,6 +1,6 @@
 import {msGraph} from "@gzhangx/googleapi"
 import { IMsGraphCreds, IAuthOpt, IMsGraphDirPrms, IMsGraphExcelItemOpt } from "@gzhangx/googleapi/lib/msGraph/types";
-
+import { ILogger } from "@gzhangx/googleapi/lib/msGraph/msauth";
 const tenantClientInfo: IMsGraphCreds = {
     client_id: '72f543e0-817c-4939-8925-898b1048762c',
     refresh_token: process.env.REFRESH_TOKEN,
@@ -8,4 +8,16 @@ const tenantClientInfo: IMsGraphCreds = {
 }
 export function getMSClientTenantInfo() {        
     return tenantClientInfo;
+}
+
+export function getMsDirClientPrms(sharedUrl: string, logger:ILogger) {
+    const prm: IMsGraphDirPrms = {
+        creds: {
+            tenantClientInfo: getMSClientTenantInfo(),
+            logger,
+        },
+        sharedUrl,
+        driveId: '',
+    };
+    return prm;
 }
