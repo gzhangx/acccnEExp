@@ -332,10 +332,16 @@ export async function resubmitLine(lineNum: number, logger: ILogger) {
     const msdirOps = await msGraph.msdir.getMsDir(msGrapDirPrms);
 
     const imgAttachements = await pmap(filesByComma.split(',').filter(x => x), async fileName => {
+        let extInd = fileName.lastIndexOf('.');
+        let ext = 'png';
+        if (extInd > 0) {
+            ext = fileName.substring(extInd+1)
+        }
+        const contentType = `image/${ext}`;
         return {
             fileName,
             content: await msdirOps.getFileByPath(fileName),
-            contentType:'',
+            contentType,
         }
     })
     const message = {
