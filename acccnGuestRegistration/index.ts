@@ -10,8 +10,22 @@ import * as moment from 'moment-timezone'
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
     context.log('HTTP trigger function processed a request.');
     const getPrm = name => (req.query[name] || (req.body && req.body[name])) as string;
-    const action = getPrm('action');
+    const action = getPrm('action');    
 
+    const today = getPrm('today');
+    function addPathToImg(fname: string) {
+        if (!fname) return fname;
+        return `新人资料/${today}/${fname}`;
+    }
+    if (!today.match(/^[0-9]{4}-[0-9]{2}--[0-9]{2}$/)) {
+        context.res = {
+            // status: 200, /* Defaults to 200 */
+            body: {
+                error: 'Bad date ' + today,
+            }
+        };
+        return;
+    }
     context.log(`action=${action}`);
     function checkFileName() {
         const fname = getPrm('name');
@@ -21,7 +35,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             };
             return null;
         }
-        return fname;
+        return addPathToImg(fname);
     }
     //await store.getAllDataNoCache();
     let responseMessage = null;
@@ -34,7 +48,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     const xlsOps = await msGraph.msExcell.getMsExcel(msGraphPrms, {
         fileName: '新人资料/新人资料表汇总new.xlsx'
     });    
-    const today = moment().format('YYYY-MM-DD');
+    //const today = moment().format('YYYY-MM-DD');
     await xlsOps.createSheet(today);
     for (let i = 0; i < 100; i++) {
         const sheets = await xlsOps.getWorkSheets();
@@ -75,7 +89,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     if (action === "saveGuest") {
         const name = getPrm('name');
         const email = getPrm('email') || '';
-        const picture = getPrm('picture') || '';
+        const picture = addPathToImg(getPrm('picture') || '');
         context.log(`saveGuest for ${name}:${email}`);
         if (!name) {
             return returnError('Must have name or email');
