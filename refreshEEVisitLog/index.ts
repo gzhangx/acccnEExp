@@ -2,7 +2,7 @@ import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import { msGraph } from "@gzhangx/googleapi"
 import { ILogger } from "@gzhangx/googleapi/lib/msGraph/msauth";
 import { IMsGraphCreds, IAuthOpt,IMsGraphDirPrms,IMsGraphExcelItemOpt} from "@gzhangx/googleapi/lib/msGraph/types";
-import { getMsDirClientPrms, generateRefreshTokenCode } from './lib/ms'
+import { getMsDirClientPrms, generateRefreshTokenCode, getRefreshToken } from './lib/ms'
 
 
 async function calculateEEVisitTimes(logger:ILogger) {
@@ -51,7 +51,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         ? "Hello, " + name + ". This HTTP triggered function executed successfully."
         : "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.";
 
-    context.log(`name is ${name} (can be refreshGetCode)`);
+    context.log(`name is ${name} (can be refreshGetCode|waitToken)`);
     let result: any;
     if (!req.query.name) {
         result = await calculateEEVisitTimes(msg => context.log(msg));
@@ -59,6 +59,14 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         context.log(`refreshGetCode`);
         result = await generateRefreshTokenCode(context.log);
         context.log(`refreshGetCode result`,result);
+    } else if (req.query.name === 'waitToken') {
+        context.log(`waitToken`);
+        const device_code = req.query.device_code;
+        result = await getRefreshToken(context.log, device_code).catch(err => {
+            console.log('error happened in getRefreshToken', err);
+            return err;
+        })
+        context.log(result);
     }
     context.res = {
         // status: 200, /* Defaults to 200 */
