@@ -29,6 +29,8 @@ export async function generateRefreshTokenCode(logger: ILogger) {
 
 export async function getRefreshToken(logger: ILogger, deviceCode:string) {
     return await msGraph.msauth.getAuth(getMSClientTenantInfo(logger)).refreshTokenSeperated.getRefreshTokenPartFinish(deviceCode, async (tk) => {
+        logger('Saving token ', tk);
         fs.writeFileSync(`d:/home/data/Functions/sampledata/refreshEEVisitLog.json`, JSON.stringify(tk));
+        logger('done save token')
     });
 }

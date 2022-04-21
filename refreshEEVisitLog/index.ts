@@ -73,7 +73,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         }
         context.log(`waitToken ${device_code}`);
         result = await getRefreshToken(context.log, device_code).catch(err => {
-            console.log('error happened in getRefreshToken', err);
+            context.log('error happened in getRefreshToken', err);
             return err;
         })
         context.log(result);
