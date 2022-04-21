@@ -2,10 +2,10 @@ import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import { msGraph } from "@gzhangx/googleapi"
 import { ILogger } from "@gzhangx/googleapi/lib/msGraph/msauth";
 import { IMsGraphCreds, IAuthOpt,IMsGraphDirPrms,IMsGraphExcelItemOpt} from "@gzhangx/googleapi/lib/msGraph/types";
-import { getMsDirClientPrms } from './lib/ms'
+import { getMsDirClientPrms, generateRefreshTokenCode } from './lib/ms'
 
 
-async function test(logger:ILogger) {
+async function calculateEEVisitTimes(logger:ILogger) {
     const prm: IMsGraphDirPrms = getMsDirClientPrms('https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/%E4%B8%89%E7%A6%8F%E6%8E%A2%E8%AE%BF%E8%AE%B0%E5%BD%95.xlsx?d=wf3a17698953344988a206fbe0fecded5&csf=1&web=1&e=sMhg4O',
         logger);
     const opt: IMsGraphExcelItemOpt = {
@@ -51,10 +51,15 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         ? "Hello, " + name + ". This HTTP triggered function executed successfully."
         : "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.";
 
-    const result = await test(msg => context.log(msg));
+    let result: any;
+    if (!req.query.name) {
+        result = await calculateEEVisitTimes(msg => context.log(msg));
+    } else if (req.query.name === 'refreshGetCode') {
+        result = await generateRefreshTokenCode(context.log);
+    }
     context.res = {
         // status: 200, /* Defaults to 200 */
-        body: JSON.stringify(result)
+        body: result
     };
 
 };

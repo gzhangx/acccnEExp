@@ -149,10 +149,7 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
 
 function getGraphDirPrms(logger: ILogger) {
     const msGrapDirPrms: IMsGraphDirPrms = {
-        creds: {
-            logger,
-            tenantClientInfo: getMSClientTenantInfo(),
-        },
+        creds: getMSClientTenantInfo(logger),
         sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/Documents/safehouse/empty2022expense.xlsx?d=w1a9a3f0fe89a4f9f93314efc910315fd&csf=1&web=1&e=WSHzge',
     }
     return msGrapDirPrms;
