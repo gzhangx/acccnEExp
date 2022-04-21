@@ -51,11 +51,14 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         ? "Hello, " + name + ". This HTTP triggered function executed successfully."
         : "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.";
 
+    context.log(`name is ${name} (can be refreshGetCode)`);
     let result: any;
     if (!req.query.name) {
         result = await calculateEEVisitTimes(msg => context.log(msg));
     } else if (req.query.name === 'refreshGetCode') {
+        context.log(`refreshGetCode`);
         result = await generateRefreshTokenCode(context.log);
+        context.log(`refreshGetCode result`,result);
     }
     context.res = {
         // status: 200, /* Defaults to 200 */
