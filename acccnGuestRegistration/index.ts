@@ -17,7 +17,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         if (!fname) return fname;
         return `新人资料/${today}/${fname}`;
     }
-    if (!today.match(/^[0-9]{4}-[0-9]{2}--[0-9]{2}$/)) {
+    if (!today.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)) {
         context.res = {
             // status: 200, /* Defaults to 200 */
             body: {
