@@ -1,5 +1,4 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
-import { brotliDecompressSync } from "zlib";
 
 import { submitFile, getCategories} from '../refreshEEVisitLog/lib/localMissionFile'
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
