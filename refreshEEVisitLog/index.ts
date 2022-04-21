@@ -51,6 +51,13 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         ? "Hello, " + name + ". This HTTP triggered function executed successfully."
         : "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.";
 
+    function retErr(error:string) {
+        context.res = {
+            body: {
+                error,
+            }
+        }
+    }
     context.log(`name is ${name} (can be refreshGetCode|waitToken)`);
     let result: any;
     if (!req.query.name) {
@@ -59,9 +66,12 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         context.log(`refreshGetCode`);
         result = await generateRefreshTokenCode(context.log);
         context.log(`refreshGetCode result`,result);
-    } else if (req.query.name === 'waitToken') {
-        context.log(`waitToken`);
+    } else if (req.query.name === 'waitToken') {        
         const device_code = req.query.device_code;
+        if (!device_code) {
+            return retErr('no device code');
+        }
+        context.log(`waitToken ${device_code}`);
         result = await getRefreshToken(context.log, device_code).catch(err => {
             console.log('error happened in getRefreshToken', err);
             return err;
