@@ -31,7 +31,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         return ops;
     }
     const xlsOps = await msGraph.msExcell.getMsExcel(msGraphPrms, {
-        fileName: '新人资料表汇总new.xlsx'
+        fileName: '新人资料/新人资料表汇总new.xlsx'
     });    
     const today = moment().format('YYYY-MM-DD');
     await xlsOps.createSheet(today);
