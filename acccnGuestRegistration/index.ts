@@ -4,6 +4,7 @@ import { IMsGraphCreds, IAuthOpt, IMsGraphDirPrms, IMsGraphExcelItemOpt } from "
 
 import { getMsDirClientPrms } from '../refreshEEVisitLog/lib/ms'
 import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
+import { delay } from "@gzhangx/googleapi/lib/msGraph/msauth";
 import * as moment from 'moment-timezone'
 
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
@@ -35,6 +36,13 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     });    
     const today = moment().format('YYYY-MM-DD');
     await xlsOps.createSheet(today);
+    for (let i = 0; i < 100; i++) {
+        const sheets = await xlsOps.getWorkSheets();
+        const found = sheets.value.find(v => v.name === today);
+        context.log(`Sheets (trying to find ${today}), waiting ${i*500}`,found);
+        if (found) break;
+        await delay(500);
+    }
 
     type IDataWithError = {
         error?: string;
