@@ -64,15 +64,13 @@ export async function getUtil(today: string, logger: ILogger) {
         logger);
     
     
-    if (msGraphPrms.driveId !== cache.driveId || !cache.driveId) {
-        const oldCachedDriveId = cache.driveId;
-        msGraphPrms.driveId = cache.driveId;
-        if (!cache.driveId) {
-            const ops = await getMsDirOpt();
-            cache.driveId = msGraphPrms.driveId = ops.driveId;
-        }
-        saveCache(`msGraphPrms oldId=${oldCachedDriveId}, new=${msGraphPrms.driveId}`);
+    if (!cache.driveId) {
+        logger('Start load driveId');
+        const ops = await getMsDirOpt();
+        cache.driveId = msGraphPrms.driveId = ops.driveId;
+        saveCache(`msGraphPrms loaded drive id=${msGraphPrms.driveId}`);
     }
+    msGraphPrms.driveId = cache.driveId;
     async function getMsDirOpt() {
         const ops = await msGraph.msdir.getMsDir(msGraphPrms);
         return ops;
