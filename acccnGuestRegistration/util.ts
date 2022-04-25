@@ -65,12 +65,13 @@ export async function getUtil(today: string, logger: ILogger) {
     
     
     if (msGraphPrms.driveId !== cache.driveId || !cache.driveId) {
+        const oldCachedDriveId = cache.driveId;
         msGraphPrms.driveId = cache.driveId;
         if (!cache.driveId) {
             const ops = await getMsDirOpt();
             cache.driveId = msGraphPrms.driveId = ops.driveId;
         }
-        saveCache("msGraphPrms");
+        saveCache(`msGraphPrms oldId=${oldCachedDriveId}, new=${msGraphPrms.driveId}`);
     }
     async function getMsDirOpt() {
         const ops = await msGraph.msdir.getMsDir(msGraphPrms);
@@ -82,8 +83,9 @@ export async function getUtil(today: string, logger: ILogger) {
     };
     const xlsOps = await msGraph.msExcell.getMsExcel(msGraphPrms, xlsPrms);
     if (xlsPrms.itemId !== cache.newGuestXlsxItemId) {
+        const dbgRmCachedId = cache.newGuestXlsxItemId;
         cache.newGuestXlsxItemId = xlsPrms.itemId;
-        saveCache("xlsOps");
+        saveCache(`xlsOps, newId ${xlsPrms.itemId}, old one ${dbgRmCachedId}`);
     }
     //const today = moment().format('YYYY-MM-DD');
     if (cache.today !== today) {
