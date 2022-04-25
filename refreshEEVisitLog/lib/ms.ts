@@ -6,7 +6,7 @@ import * as fs from 'fs'
 export function getStoreFileLoc(fname: string) {
     return `d:/home/data/Functions/sampledata/${fname}`;
 }
-
+//files: refreshEEVisitLog.json, tokenCache.json
 export function getTokenFileLoc() {
     return getStoreFileLoc('refreshEEVisitLog.json');
 }
@@ -18,11 +18,24 @@ export function getMSClientTenantInfo(logger: ILogger): IMsGraphCreds {
     } catch (err) {
         logger(`Error get refresh token from file`, err);
     }
+
+    const tokenCatchFileFullname = getStoreFileLoc('tokenCache.json');
     return {
         client_id: '72f543e0-817c-4939-8925-898b1048762c',
         refresh_token,
         tenantId: '60387d22-1b13-42a0-8894-208eeafd9e57',
         logger,
+        loadTokenCache: () => {
+            try {
+                return JSON.parse(fs.readFileSync(tokenCatchFileFullname).toString())
+            } catch (err) {
+                logger(`Failed load tokenCache`, err);
+                return {};
+            }
+        },
+        saveTokenCache: async cach => {
+            fs.writeFileSync(tokenCatchFileFullname, JSON.stringify(cach, null, 2));
+        }
     }
 }
 
