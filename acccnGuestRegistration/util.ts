@@ -43,8 +43,8 @@ export async function getUtil(today: string, logger: ILogger) {
             logger(`Cant load cache ${getGuestRegCacheFile()}`,err);
         }
     }
-    function saveCache() {
-        logger('save Cache');
+    function saveCache(actFor:string) {
+        logger(`save Cache ${actFor}`);
         try {
             fs.writeFileSync(getGuestRegCacheFile(), JSON.stringify(cache, null, 2));
         } catch (err) {
@@ -70,7 +70,7 @@ export async function getUtil(today: string, logger: ILogger) {
             const ops = await getMsDirOpt();
             cache.driveId = msGraphPrms.driveId = ops.driveId;
         }
-        saveCache();
+        saveCache("msGraphPrms");
     }
     async function getMsDirOpt() {
         const ops = await msGraph.msdir.getMsDir(msGraphPrms);
@@ -83,7 +83,7 @@ export async function getUtil(today: string, logger: ILogger) {
     const xlsOps = await msGraph.msExcell.getMsExcel(msGraphPrms, xlsPrms);
     if (xlsPrms.itemId !== cache.newGuestXlsxItemId) {
         cache.newGuestXlsxItemId = xlsPrms.itemId;
-        saveCache();
+        saveCache("xlsOps");
     }
     //const today = moment().format('YYYY-MM-DD');
     if (cache.today !== today) {
@@ -96,8 +96,9 @@ export async function getUtil(today: string, logger: ILogger) {
             if (found) break;
             await delay(500);
         }
+        const dbgCached = cache.today;
         cache.today = today;
-        saveCache();
+        saveCache(`todayChanged ${today}, cache was ${dbgCached}`);
     }
     
     const loadTodayData = async () => {
