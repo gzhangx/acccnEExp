@@ -14,8 +14,11 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
 
     const today = getPrm('today');
     function addPathToImg(fname: string) {
+        const todayMoment = moment(today);
+        const quarter = Math.floor(((todayMoment.month() + 1) % 12) / 3 + 1);
+        const year = todayMoment.format('YYYY');
         if (!fname) return fname;
-        return `新人资料/${today}/${fname}`;
+        return `新人资料/${year}-Q${quarter}-DBGRM/${today}/${fname}`;
     }
     if (!today.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)) {
         context.res = {

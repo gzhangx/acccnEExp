@@ -2,7 +2,7 @@ import { submitFile, resubmitLine } from './localMissionFile'
 
 const logger = msg => console.log(msg);
 
-resubmitLine(15, logger);
+//resubmitLine(15, logger);
 
 function testold() {
     submitFile({
