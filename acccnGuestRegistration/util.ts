@@ -59,7 +59,7 @@ export async function getUtil(today: string, logger: ILogger) {
         const quarter = Math.floor(((todayMoment.month() + 1) % 12) / 3 + 1);
         const year = todayMoment.format('YYYY');
         if (!fname) return fname;
-        return `新人资料/${year}-Q${quarter}-DBGRM/${today}/${fname}`;
+        return `新人资料/${year}-Q${quarter}/${today}/${fname}`;
     }
 
     const msGraphPrms: IMsGraphDirPrms = getMsDirClientPrms('https://acccnusa.sharepoint.com/:x:/r/sites/newcomer/Shared%20Documents/%E6%96%B0%E4%BA%BA%E8%B5%84%E6%96%99/%E6%96%B0%E4%BA%BA%E8%B5%84%E6%96%99%E8%A1%A8%E6%B1%87%E6%80%BBnew.xlsx?d=wbd57c301f851467787c3b5405709c2bf&csf=1&web=1&e=HDYYri',
