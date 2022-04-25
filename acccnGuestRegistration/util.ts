@@ -56,8 +56,12 @@ export async function getUtil(today: string, logger: ILogger) {
         logger);
     
     
-    if (msGraphPrms.driveId !== cache.driveId) {
+    if (msGraphPrms.driveId !== cache.driveId || !cache.driveId) {
         cache.driveId = msGraphPrms.driveId;
+        if (!cache.driveId) {
+            const ops = await getMsDirOpt();
+            cache.driveId = msGraphPrms.driveId = ops.driveId;
+        }
         saveCache();
     }
     async function getMsDirOpt() {
