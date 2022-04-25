@@ -57,7 +57,7 @@ export async function getUtil(today: string, logger: ILogger) {
     
     
     if (msGraphPrms.driveId !== cache.driveId) {
-        msGraphPrms.driveId = cache.driveId;
+        cache.driveId = msGraphPrms.driveId;
         saveCache();
     }
     async function getMsDirOpt() {
