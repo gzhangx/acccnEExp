@@ -57,7 +57,7 @@ export async function getUtil(today: string, logger: ILogger) {
     
     
     if (msGraphPrms.driveId !== cache.driveId || !cache.driveId) {
-        cache.driveId = msGraphPrms.driveId;
+        msGraphPrms.driveId = cache.driveId;
         if (!cache.driveId) {
             const ops = await getMsDirOpt();
             cache.driveId = msGraphPrms.driveId = ops.driveId;
