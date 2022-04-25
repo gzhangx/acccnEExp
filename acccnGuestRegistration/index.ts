@@ -14,7 +14,19 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     const action = getPrm('action');    
 
     const today = getPrm('today');
-    
+    function returnError(error) {
+        context.log(error);
+        context.res = {
+            // status: 200, /* Defaults to 200 */
+            body: {
+                error: error
+            }
+        };
+    }
+
+    if (!today) {
+        return returnError('Must set today');
+    }
     const util = await getUtil(today, context.log);
     if (!today.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)) {
         context.res = {
@@ -45,15 +57,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         length?: number;
     }
 
-    function returnError(error) {
-        context.log(error);
-        context.res = {
-            // status: 200, /* Defaults to 200 */
-            body: {
-                error: error
-            }
-        };
-    }
+    
     function getErrorHndl(inf: string) {
         return (err): IDataWithError => {
             responseMessage = {
