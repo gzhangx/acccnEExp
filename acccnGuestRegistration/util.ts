@@ -38,7 +38,9 @@ export async function getUtil(today: string, logger: ILogger) {
     let cache: IGuestRegCacheInfo = {} as IGuestRegCacheInfo;
     if (fs.existsSync(getGuestRegCacheFile())) {
         try {
+            logger('------Loading cache');
             cache = JSON.parse(fs.readFileSync(getGuestRegCacheFile()).toString());
+            logger('------Loaded cache');
         } catch (err) {
             logger(`Cant load cache ${getGuestRegCacheFile()}`,err);
         }
