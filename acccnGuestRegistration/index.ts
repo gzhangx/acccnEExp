@@ -79,7 +79,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
                 picture,
             }).then(() => {
                 return `user ${name} Saved`;
-            }).catch(getErrorHndl(`user save error for ${name}:${email}`));            
+            }).catch(getErrorHndl(`user save error for ${name}:${email}`));
         }
     } else if (action === 'loadData') {
         responseMessage = await util.loadTodayData();
@@ -89,9 +89,8 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         const fname = checkFileName();
         if (!fname) {
             return returnError('bad file name, return')
-        }
-        const ops = await util.getMsDirOpt();
-        const ary = await ops.getFileByPath(fname).catch(getErrorHndl(`unable to load image ${fname}`)) as IDataWithError;
+        }        
+        const ary = await util.getFileByPath(fname).catch(getErrorHndl(`unable to load image ${fname}`)) as IDataWithError;
         if (ary.error) {
             responseMessage = ary.error;
         } else {
@@ -110,14 +109,8 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         const fname = checkFileName();
         if (!fname) return returnError('No filename for saveImage');
         let dataStr = getPrm('data') as string;
-        const sub = dataStr.indexOf('base64,');
-        if (sub > 0) {
-            dataStr = dataStr.substring(sub + 7).trim();
-        }
-        const buf = Buffer.from(dataStr, 'base64');
-        const ops = await util.getMsDirOpt();
         try {
-            const res = await ops.createFile(fname, buf);
+            const res = await await util.saveImage(fname, dataStr)
             context.res = {
                 body: {
                     id: res.id,
@@ -126,7 +119,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
                 }
             };
         } catch (err) {
-            getErrorHndl(`saveImage createFile error for ${fname} ${buf.length}`)(err);
+            getErrorHndl(`saveImage createFile error for ${fname} ${dataStr.length}`)(err);
         }
         return;
     }

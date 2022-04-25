@@ -57,6 +57,23 @@ export async function getUtil(today: string, logger: ILogger) {
         await xlsOps.updateRange(today, 'A1', `C${toUpdate.length}`, toUpdate);
         return `user ${name} Saved`;
     }
+
+    async function saveImage(fname:string, imgStr:string) {
+        const sub = imgStr.indexOf('base64,');
+        if (sub > 0) {
+            imgStr = imgStr.substring(sub + 7).trim();
+        }
+        const buf = Buffer.from(imgStr, 'base64');
+        const ops = await getMsDirOpt();
+        const res = await ops.createFile(fname, buf);
+        return res;
+    }
+
+    async function getFileByPath(fname: string) {
+        const ops = await getMsDirOpt();
+        const ary = await ops.getFileByPath(fname);
+        return ary;
+    }
     return {
         addPathToImg,
         msGraphPrms,
@@ -65,5 +82,7 @@ export async function getUtil(today: string, logger: ILogger) {
         loadTodayData,
 
         saveGuest,
+        saveImage,
+        getFileByPath,
     }
 }
