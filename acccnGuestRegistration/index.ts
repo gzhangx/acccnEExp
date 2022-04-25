@@ -34,7 +34,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             };
             return null;
         }
-        return util.addPathToImg(fname);
+        return (fname);
     }
     //await store.getAllDataNoCache();
     let responseMessage = null;
@@ -110,7 +110,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         if (!fname) return returnError('No filename for saveImage');
         let dataStr = getPrm('data') as string;
         try {
-            const res = await await util.saveImage(fname, dataStr)
+            const res = await await util.saveImage(util.addPathToImg(fname), dataStr)
             context.res = {
                 body: {
                     id: res.id,
