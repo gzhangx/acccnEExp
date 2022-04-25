@@ -26,6 +26,14 @@ interface IGuestRegCacheInfo {
 }
 export async function getUtil(today: string, logger: ILogger) {
 
+    if (!today) {
+        const error = 'Must define today!!!';
+        logger(error);
+        throw {
+            message: error,
+            error,
+        }
+    }
 
     let cache: IGuestRegCacheInfo = {} as IGuestRegCacheInfo;
     if (fs.existsSync(getGuestRegCacheFile())) {
