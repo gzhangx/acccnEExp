@@ -3,16 +3,47 @@ import * as moment from 'moment-timezone'
 import { msGraph } from "@gzhangx/googleapi"
 import { IMsGraphCreds, IAuthOpt, IMsGraphDirPrms, IMsGraphExcelItemOpt } from "@gzhangx/googleapi/lib/msGraph/types";
 
-import { getMsDirClientPrms } from '../refreshEEVisitLog/lib/ms'
+import { getMsDirClientPrms, getStoreFileLoc } from '../refreshEEVisitLog/lib/ms'
 import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
 import { delay, ILogger } from "@gzhangx/googleapi/lib/msGraph/msauth";
+
+import * as fs from 'fs';
 
 interface IGuestInfo {
     name: string;
     email: string;
     picture: string;
 }
+
+function getGuestRegCacheFile() {
+    return getStoreFileLoc('guestRegistrationCache.json');
+}
+
+interface IGuestRegCacheInfo {
+    driveId: string;
+    newGuestXlsxItemId: string;
+    today: string;
+}
 export async function getUtil(today: string, logger: ILogger) {
+
+
+    let cache: IGuestRegCacheInfo = {} as IGuestRegCacheInfo;
+    if (fs.existsSync(getGuestRegCacheFile())) {
+        try {
+            cache = JSON.parse(fs.readFileSync(getGuestRegCacheFile()).toString());
+        } catch (err) {
+            logger(`Cant load cache ${getGuestRegCacheFile()}`,err);
+        }
+    }
+    function saveCache() {
+        logger('save Cache');
+        try {
+            fs.writeFileSync(getGuestRegCacheFile(), JSON.stringify(cache, null, 2));
+        } catch (err) {
+            logger('Error save cache', err);
+        }
+    }
+
     function addPathToImg(fname: string) {
         const todayMoment = moment(today);
         const quarter = Math.floor(((todayMoment.month() + 1) % 12) / 3 + 1);
@@ -23,21 +54,38 @@ export async function getUtil(today: string, logger: ILogger) {
 
     const msGraphPrms: IMsGraphDirPrms = getMsDirClientPrms('https://acccnusa.sharepoint.com/:x:/r/sites/newcomer/Shared%20Documents/%E6%96%B0%E4%BA%BA%E8%B5%84%E6%96%99/%E6%96%B0%E4%BA%BA%E8%B5%84%E6%96%99%E8%A1%A8%E6%B1%87%E6%80%BBnew.xlsx?d=wbd57c301f851467787c3b5405709c2bf&csf=1&web=1&e=HDYYri',
         logger);
+    
+    
+    if (msGraphPrms.driveId !== cache.driveId) {
+        msGraphPrms.driveId = cache.driveId;
+        saveCache();
+    }
     async function getMsDirOpt() {
         const ops = await msGraph.msdir.getMsDir(msGraphPrms);
         return ops;
     }
-    const xlsOps = await msGraph.msExcell.getMsExcel(msGraphPrms, {
-        fileName: '新人资料/新人资料表汇总new.xlsx'
-    });
+    const xlsPrms = {
+        fileName: '新人资料/新人资料表汇总new.xlsx',
+        itemId: cache.newGuestXlsxItemId,
+    };
+    const xlsOps = await msGraph.msExcell.getMsExcel(msGraphPrms, xlsPrms);
+    if (xlsPrms.itemId !== cache.newGuestXlsxItemId) {
+        cache.newGuestXlsxItemId = xlsPrms.itemId;
+        saveCache();
+    }
     //const today = moment().format('YYYY-MM-DD');
-    await xlsOps.createSheet(today);
-    for (let i = 0; i < 100; i++) {
-        const sheets = await xlsOps.getWorkSheets();
-        const found = sheets.value.find(v => v.name === today);
-        logger(`Sheets (trying to find ${today}), waiting ${i * 500}`, found);
-        if (found) break;
-        await delay(500);
+    if (cache.today !== today) {
+        await xlsOps.createSheet(today);
+        
+        for (let i = 0; i < 100; i++) {
+            const sheets = await xlsOps.getWorkSheets();
+            const found = sheets.value.find(v => v.name === today);
+            logger(`Sheets (trying to find ${today}), waiting ${i * 500}`, found);
+            if (found) break;
+            await delay(500);
+        }
+        cache.today = today;
+        saveCache();
     }
     
     const loadTodayData = async () => {

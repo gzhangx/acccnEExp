@@ -3,8 +3,12 @@ import { IMsGraphCreds, IAuthOpt, IMsGraphDirPrms, IMsGraphExcelItemOpt } from "
 import { ILogger, IRefreshTokenResult } from "@gzhangx/googleapi/lib/msGraph/msauth";
 import * as fs from 'fs'
 
-function getTokenFileLoc() {
-    return `d:/home/data/Functions/sampledata/refreshEEVisitLog.json`;
+export function getStoreFileLoc(fname: string) {
+    return `d:/home/data/Functions/sampledata/${fname}`;
+}
+
+export function getTokenFileLoc() {
+    return getStoreFileLoc('refreshEEVisitLog.json');
 }
 export function getMSClientTenantInfo(logger: ILogger): IMsGraphCreds {
     let refresh_token = process.env.REFRESH_TOKEN;
