@@ -3,7 +3,7 @@ import * as moment from 'moment-timezone'
 import { msGraph } from "@gzhangx/googleapi"
 import { IMsGraphCreds, IAuthOpt, IMsGraphDirPrms, IMsGraphExcelItemOpt } from "@gzhangx/googleapi/lib/msGraph/types";
 
-import { getMsDirClientPrms, getStoreFileLoc } from '../refreshEEVisitLog/lib/ms'
+import { getMsDirClientPrms, getStoreFileLoc, getStoreTempFileLoc, treatFileName } from '../refreshEEVisitLog/lib/ms'
 import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
 import { delay, ILogger } from "@gzhangx/googleapi/lib/msGraph/msauth";
 
@@ -148,4 +148,14 @@ export async function getUtil(today: string, logger: ILogger) {
         saveImage,
         getFileByPath,
     }
+}
+
+
+
+export function storeTempFile(name: string, data: string) {
+    fs.appendFileSync(getStoreTempFileLoc(name), data);
+}
+
+export function loadTempFile(name: string) {
+    return fs.readFileSync(getStoreTempFileLoc(name)).toString();
 }

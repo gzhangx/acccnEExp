@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import {msGraph} from "@gzhangx/googleapi"
 import { IMsGraphCreds, IAuthOpt,IMsGraphDirPrms,IMsGraphExcelItemOpt} from "@gzhangx/googleapi/lib/msGraph/types";
 import { ILogger } from '@gzhangx/googleapi/lib/msGraph/msauth';
-import { getMSClientTenantInfo } from './ms'
+import { getMSClientTenantInfo, treatFileName } from './ms'
 import { emailTransporter, emailUser} from './nodemailer'
 import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
 
@@ -21,7 +21,7 @@ interface INameBufAttachement {
     buffer: string;
 }
 
-const treatFileName = (path:string)=>path.replace(/[\\"|*<>?]/g, '').trim()
+
 export async function getCategories(logger: ILogger): Promise<ILocalCats[]> {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {        

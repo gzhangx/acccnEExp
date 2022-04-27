@@ -7,13 +7,13 @@ import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
 import { delay } from "@gzhangx/googleapi/lib/msGraph/msauth";
 import * as moment from 'moment-timezone'
 
-import { getUtil } from './util'
+import * as localUtil from './util'
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
     context.log('HTTP trigger function processed a request.');
     const getPrm = name => (req.query[name] || (req.body && req.body[name])) as string;
     const action = getPrm('action');    
 
-    const today = getPrm('today');
+    const today = getPrm('today') || moment().format('YYYY-MM-DD');
     function returnError(error) {
         context.log(error);
         context.res = {
@@ -27,7 +27,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     if (!today) {
         return returnError('Must set today');
     }
-    const util = await getUtil(today, context.log);
+    const util = await localUtil.getUtil(today, context.log);
     if (!today.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)) {
         context.res = {
             // status: 200, /* Defaults to 200 */
@@ -69,6 +69,20 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     }
 
     
+    async function saveImage(fname:string, dataStr:string) {
+        try {
+            const res = await util.saveImage(util.addPathToImg(fname), dataStr)
+            context.res = {
+                body: {
+                    id: res.id,
+                    file: res.file,
+                    size: res.size,
+                }
+            };
+        } catch (err) {
+            getErrorHndl(`saveImage createFile error for ${fname} ${dataStr.length}`)(err);
+        }
+    }
     if (action === "saveGuest") {
         const name = getPrm('name');
         const email = getPrm('email') || '';
@@ -113,19 +127,19 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         const fname = checkFileName();
         if (!fname) return returnError('No filename for saveImage');
         let dataStr = getPrm('data') as string;
-        try {
-            const res = await await util.saveImage(util.addPathToImg(fname), dataStr)
-            context.res = {
-                body: {
-                    id: res.id,
-                    file: res.file,
-                    size: res.size,
-                }
-            };
-        } catch (err) {
-            getErrorHndl(`saveImage createFile error for ${fname} ${dataStr.length}`)(err);
-        }
+        await saveImage(fname, dataStr);
         return;
+    } else if (action === 'savePartialImageToTemp') {
+        const fname = checkFileName();
+        if (!fname) return returnError('No filename for saveImage');
+        let dataStr = getPrm('data') as string;
+        if (!dataStr) return returnError('No Data');
+        localUtil.storeTempFile(`${today}-${fname}`, dataStr);
+    } else if (action === 'uploadSavedImage') {
+        const fname = checkFileName();
+        if (!fname) return returnError('No filename for saveImage');
+        const dataStr = localUtil.loadTempFile(`${today}-${fname}`);
+        await saveImage(fname, dataStr);
     }
 
 

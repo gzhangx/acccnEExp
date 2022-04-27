@@ -3,9 +3,15 @@ import { IMsGraphCreds, IAuthOpt, IMsGraphDirPrms, IMsGraphExcelItemOpt } from "
 import { ILogger, IRefreshTokenResult } from "@gzhangx/googleapi/lib/msGraph/msauth";
 import * as fs from 'fs'
 
+export const treatFileName = (path: string) => path.replace(/[\\"|*<>?]/g, '').trim()
 export function getStoreFileLoc(fname: string) {
     return `d:/home/data/Functions/sampledata/${fname}`;
 }
+
+export function getStoreTempFileLoc(fname: string) {
+    return `d:/home/data/Functions/sampledata/tempFiles/${treatFileName(fname)}`;
+}
+
 //files: refreshEEVisitLog.json, tokenCache.json
 export function getTokenFileLoc() {
     return getStoreFileLoc('refreshEEVisitLog.json');
