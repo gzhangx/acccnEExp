@@ -157,5 +157,7 @@ export function storeTempFile(name: string, data: string) {
 }
 
 export function loadTempFile(name: string) {
-    return fs.readFileSync(getStoreTempFileLoc(name)).toString();
+    const fullPath = getStoreTempFileLoc(name);
+    const dataStr = fs.readFileSync(fullPath).toString();
+    fs.rmSync(fullPath);
 }
