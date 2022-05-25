@@ -280,6 +280,9 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         to: ['gzhangx@hotmail.com'].concat(ccList||[]),
         subject: `From ${payeeName} for ${found.name} Amount ${amount}`,
         text: `
+        Dear brother George,
+        Please see the attached reimbursement request for ${payeeName}, thanks!
+        
         Date: ${today}
         subCode: ${found.subCode}
         expCode: ${found.expCode}
