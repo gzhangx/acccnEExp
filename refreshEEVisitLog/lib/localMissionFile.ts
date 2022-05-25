@@ -316,10 +316,14 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     const sendEmailRes = await emailTransporter.sendMail(message).catch(err => {
         logger(err);
         return {
+            ...found,
             error: err.message,
         }
     });
-    return sendEmailRes;
+    return {
+        ...found,
+        sendEmailRes,
+    };
 }
 
 
