@@ -154,6 +154,17 @@ function getGraphDirPrms(logger: ILogger) {
     }
     return msGrapDirPrms;
 }
+
+async function getSheetOps(logger:ILogger) {
+    const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
+    const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
+        fileName: 'Documents/safehouse/localMissionRecords.xlsx',
+    });
+    return {
+        sheetOps,
+        msGrapDirPrms,
+    }
+}
 export async function submitFile(submitFileInfo: ISubmitFileInterface) {    
     const {
         payeeName,
@@ -196,11 +207,12 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     //     //.greyscale() // set greyscale
     //     .write('./temp/accchForm.jpg'); // save
     
-    const YYYY = moment().format('YYYY');
-    const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
-    const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
-        fileName: 'Documents/safehouse/localMissionRecords.xlsx',
-    });
+    const YYYY = moment().format('YYYY');    
+
+    const {
+        msGrapDirPrms,
+        sheetOps,
+    } = await getSheetOps(logger);
 
 
     const sheetName = nowMoment.format('YYYY');
@@ -375,3 +387,55 @@ export async function resubmitLine(lineNum: number, logger: ILogger) {
     return sendEmailRes;
 }
 
+export async function updateSums(logger:ILogger) {
+    const nowMoment = moment();
+    const sheetName = nowMoment.format('YYYY');
+    logger(`reading sheet ${sheetName}`);
+    const {
+        sheetOps,
+    } = await getSheetOps(logger);
+    const sheetVals = await sheetOps.readAll(sheetName);
+    const colNames = ['date', 'amount', 'code', 'exp', 'to', 'comment', 'cat']
+    const sums = sheetVals.text.slice(1).reduce((acc, valAry) => {
+        const val = colNames.reduce((valAcc, name, pos) => {
+            let vv = valAcc[name] = valAry[pos].trim();
+            if (name === 'amount') {
+                vv.replace(/$/g, '');
+                let amt = 0;
+                if (vv.startsWith('(')) {
+                    amt = -parseFloat(vv.replace(/[\(\)]/g, ''));
+                } else {
+                    amt = parseFloat(vv);
+                }
+                valAcc[name] = amt;
+            }
+            return valAcc;
+        }, {} as { [name: string]: string | number; });
+        val.id = `${val.exp}-${val.code}`;
+        let existing = acc[val.id];
+        if (!existing) {
+            existing = {
+                amt: val.amount as number,
+                name: val.cat as string,
+            };
+            acc[val.id] = existing;
+        } else {
+            existing.amt += val.amount as number;
+            if (!existing.name) existing.name = val.cat as string;
+        }
+        return acc;
+    }, {} as { [name: string]: { amt: number; name: string; } });
+
+    const keys = Object.keys(sums);
+    keys.sort();
+    const empty = ['', '', ''];
+    const newData = keys.map(id => {
+        const sum = sums[id];
+        return [id, sum.amt.toFixed(2), sum.name];
+    }).concat([empty, empty, empty]);    
+    logger('resutling table', newData);
+
+    //await sheetOps.createSheet('sums');
+    await sheetOps.updateRange(`sums`, 'A1', `C${newData.length}`,newData);
+    return newData;
+}

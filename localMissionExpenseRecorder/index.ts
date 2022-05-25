@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 
-import { submitFile, getCategories} from '../refreshEEVisitLog/lib/localMissionFile'
+import { submitFile, getCategories, updateSums } from '../refreshEEVisitLog/lib/localMissionFile'
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
     context.log('HTTP trigger function processed a request.');
     const name = (req.query.name || (req.body && req.body.name));
@@ -17,13 +17,14 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         };
     }
     const reqBody = req.body;    
+    const action = reqBody?.action || req.query.action;
     let res = null;
-    if (reqBody.action === 'getCats') {
+    if (action === 'getCats') {
         res = await getCategories(msg => context.log(msg));
-    } else if (reqBody.action === 'saveFile') {
+    } else if (action === 'saveFile') {
         if (!reqBody.amount) {
             return errorRsp('no amount');
-        }    
+        }
         if (!reqBody.payeeName) {
             return errorRsp('no payeeName');
         }
@@ -43,8 +44,10 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             context.log(`error happened in submitFile`, err);
             return {
                 error: err,
-            }            
+            }
         })
+    } else if (action === 'updateSums') {
+        res = await updateSums(context.log)
     } else {
         res = {
             message:'bad action'
