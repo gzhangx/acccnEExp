@@ -106,6 +106,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         })
         context.log(result);
     }
+    //need to save result.refresh_token
     context.res = {
         // status: 200, /* Defaults to 200 */
         body: result

@@ -21,6 +21,7 @@ export function getMSClientTenantInfo(logger: ILogger): IMsGraphCreds {
     try {
         const dec = JSON.parse(fs.readFileSync(getTokenFileLoc()).toString()) as IRefreshTokenResult;
         refresh_token = dec.refresh_token;
+        logger('Refresh token is ' + refresh_token);
     } catch (err) {
         logger(`Error get refresh token from file`, err);
     }
@@ -40,6 +41,7 @@ export function getMSClientTenantInfo(logger: ILogger): IMsGraphCreds {
             }
         },
         saveTokenCache: async cach => {
+            logger('saving cache')
             fs.writeFileSync(tokenCatchFileFullname, JSON.stringify(cach, null, 2));
         }
     }
