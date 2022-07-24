@@ -13,58 +13,63 @@ async function calculateEEVisitTimes(logger:ILogger) {
         fileName:'三福探访记录.xlsx'
     };    
     logger('getting sheet')
-    const sheet = await msGraph.msExcell.getMsExcel(prm, opt);
-    logger('got sheet done, reading sheet1')
-    const dataAll = await sheet.readAll('Sheet1');
-    logger('got sheet read sheet 1 done')
-    logger(JSON.stringify(dataAll.text));
+    try {
+        const sheet = await msGraph.msExcell.getMsExcel(prm, opt);
+        logger('got sheet done, reading sheet1')
+        const dataAll = await sheet.readAll('Sheet1');
+        logger('got sheet read sheet 1 done')
+        logger(JSON.stringify(dataAll.text));
 
-    const studentMap = (await sheet.readAll('Students')).text.reduce((acc, line) => {
-        acc[line[0]] = true;
-        return acc;
-    }, {} as { [name: string]: boolean });
-    logger('studentMap', studentMap);
+        const studentMap = (await sheet.readAll('Students')).text.reduce((acc, line) => {
+            acc[line[0]] = true;
+            return acc;
+        }, {} as { [name: string]: boolean });
+        logger('studentMap', studentMap);
 
-    const isLeader: {[name:string]:boolean} = {};
-    const summary =dataAll.text.slice(1).reduce((acc, d) => {
-        const leader = d[4];
-        const std = d[5].split(/[,，]+/);
-        const doAdd = (name: string) => {
-            name = name.trim();
-            if (name)
-                acc[name] = (acc[name] || 0) + 1;
-        }
-        isLeader[leader] = true;
-        doAdd(leader);
-        std.forEach(doAdd);
-        return acc;
-    }, {
-    } as { [name: string]: number });
-    logger(JSON.stringify(summary))
-    const updateDataParts = Object.keys(summary).sort().reduce((acc, name) => {
-        const data = [name, summary[name].toString()] as [string, string];
-        let ary = acc.leaders;
-        if (studentMap[name]) {
-            ary = acc.students;
-        }
-        ary.push(data);
-        return acc;
-    }, {
-        leaders: [] as [string, string][],
-        students: [] as [string, string][],
-    });
+        const isLeader: { [name: string]: boolean } = {};
+        const summary = dataAll.text.slice(1).reduce((acc, d) => {
+            const leader = d[4];
+            const std = d[5].split(/[,，]+/);
+            const doAdd = (name: string) => {
+                name = name.trim();
+                if (name)
+                    acc[name] = (acc[name] || 0) + 1;
+            }
+            isLeader[leader] = true;
+            doAdd(leader);
+            std.forEach(doAdd);
+            return acc;
+        }, {
+        } as { [name: string]: number });
+        logger(JSON.stringify(summary))
+        const updateDataParts = Object.keys(summary).sort().reduce((acc, name) => {
+            const data = [name, summary[name].toString()] as [string, string];
+            let ary = acc.leaders;
+            if (studentMap[name]) {
+                ary = acc.students;
+            }
+            ary.push(data);
+            return acc;
+        }, {
+            leaders: [] as [string, string][],
+            students: [] as [string, string][],
+        });
 
-    let updateData = [] as [string, string][];
-    updateData = updateData.concat([['学员', '']]).concat(updateDataParts.students)
-        .concat([['', '']])
-        .concat([['老师,other', '']])
-        .concat(updateDataParts.leaders);
-    logger(JSON.stringify(updateData));
-    const creatRes = await sheet.createSheet('Summary');
-    logger(`create res`);
-    logger(JSON.stringify(creatRes));
-    await sheet.updateRange('Summary', 'A1', `B${updateData.length}`, updateData);
-    return updateData;
+        let updateData = [] as [string, string][];
+        updateData = updateData.concat([['学员', '']]).concat(updateDataParts.students)
+            .concat([['', '']])
+            .concat([['老师,other', '']])
+            .concat(updateDataParts.leaders);
+        logger(JSON.stringify(updateData));
+        const creatRes = await sheet.createSheet('Summary');
+        logger(`create res`);
+        logger(JSON.stringify(creatRes));
+        await sheet.updateRange('Summary', 'A1', `B${updateData.length}`, updateData);
+        return updateData;
+    } catch (error) {
+        logger('error happened', error);
+        return { error };
+    }
 }
 
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
@@ -84,7 +89,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     context.log(`name is ${name} (can be refreshGetCode|waitToken)`);
     let result: any;
     if (!req.query.name) {
-        result = await calculateEEVisitTimes(msg => context.log(msg));
+        result = await calculateEEVisitTimes(context.log);
     } else if (req.query.name === 'refreshGetCode') {
         context.log(`refreshGetCode`);
         result = await generateRefreshTokenCode(context.log);
