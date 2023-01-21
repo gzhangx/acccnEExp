@@ -23,7 +23,7 @@ function testold() {
         amount: '0.01',
         description: 'testdesc',
         logger,
-        reimbursementCat: 'Chinese New Year Carnival',
+        reimbursementCat: 'Local Community Outreach Activities',
         attachements: [],
         ccList: [],
     }).catch(err => {
