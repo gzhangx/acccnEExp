@@ -3,7 +3,7 @@ import { submitFile, resubmitLine } from './localMissionFile'
 import * as newGuestRegUtil from '../../acccnGuestRegistration/util'
 const logger = msg => console.log(msg);
 
-newGuestRegTest();
+//newGuestRegTest();
 
 async function newGuestRegTest() {
     const util = await newGuestRegUtil.getUtil('2022-04-25', console.log);
@@ -35,3 +35,6 @@ function testold() {
         return resubmitLine(15, logger);
     })
 }
+
+
+testold();
