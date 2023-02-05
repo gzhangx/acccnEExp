@@ -32,7 +32,11 @@ function testold() {
         amount: '0.01',
         description: 'testdesc',
         logger,
-        reimbursementCat: 'Local Community Outreach Activities',
+        reimbursementCat: {
+            name: 'Local Community Outreach Activities',
+            expCode: '1',
+            subCode:'1',
+        },
         attachements: [],
         ccList: [],
     }).catch(err => {
