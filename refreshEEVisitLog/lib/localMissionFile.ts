@@ -230,6 +230,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     
     const nowMoment = moment();
     const today = nowMoment.format('YYYY-MM-DD');
+    const toddayWithSec = nowMoment.format('YYYY-MM-DD-HHmmss');
     // console.log(`amtPos=${amtPos} ${today}`);
     // const img = await jimpRead('./files/expenseVoucher.PNG');
     const useDesc = description;
@@ -246,7 +247,8 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     //     //.greyscale() // set greyscale
     //     .write('./temp/accchForm.jpg'); // save
     
-    const YYYY = moment().format('YYYY');    
+    const YYYY = moment().format('YYYY');
+    const SAVE_DOC_ROOT_YYYY = `${SAVE_DOC_ROOT}/${YYYY}`;
 
     const {
         msGrapDirPrms,
@@ -282,8 +284,8 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         }
     }
     const msgAttachements = attachements.map(convertAttachement);
-    const newFileName = treatFileName(`${today}-${found.name}`);
-    const newFileFullPath = `${SAVE_DOC_ROOT}/${newFileName}.xlsx`;
+    const newFileName = treatFileName(`${toddayWithSec}-${found.name}`);
+    const newFileFullPath = `${SAVE_DOC_ROOT_YYYY}/${newFileName}.xlsx`;
     const actualNames = [];
     const msdirOps = await msGraph.msdir.getMsDir(msGrapDirPrms);
     for (let i = 0; i < msgAttachements.length; i++) {
@@ -293,7 +295,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         if (sepInd > 0) {
             filename = filename.substring(sepInd);
         }
-        const saveFn = `${SAVE_DOC_ROOT}/${newFileName}-${treatFileName(filename)}`;
+        const saveFn = `${SAVE_DOC_ROOT_YYYY}/${newFileName}-${treatFileName(filename)}`;
         logger(`Saving ${saveFn}`);
         actualNames.push(saveFn);
         await msdirOps.createFile(saveFn, att.content);
