@@ -33,9 +33,9 @@ function testold() {
         description: 'testdesc',
         logger,
         reimbursementCat: {
-            name: 'Local Community Outreach Activities',
-            expCode: '1',
-            subCode:'1',
+            name: 'EE Training',
+            expCode: '1603',
+            subCode:'03',
         },
         attachements: [],
         ccList: [],
@@ -45,10 +45,10 @@ function testold() {
         console.log(err.response ? err.response.data : err.message)
     }).then(() => {
         console.log('sending 16');
-        return resubmitLine(15, logger);
+        //return resubmitLine(15, logger);
     })
 }
 
 
-//testold();
-testGetCats();
+testold();
+//testGetCats();
