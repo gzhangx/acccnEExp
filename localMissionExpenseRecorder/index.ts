@@ -1,6 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
+import { ILogger } from "@gzhangx/googleapi/lib/msGraph/msauth";
 
-import { submitFile, getCategories, updateSums } from '../refreshEEVisitLog/lib/localMissionFile'
+import { submitFile, getCategories, updateSums, getUserToCategories } from '../refreshEEVisitLog/lib/localMissionFile'
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
     context.log('HTTP trigger function processed a request.');
     const name = (req.query.name || (req.body && req.body.name));
@@ -19,8 +20,11 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     const reqBody = req.body;    
     const action = reqBody?.action || req.query.action;
     let res = null;
+    const logger: ILogger = (...msg) => context.log(...msg);
     if (action === 'getCats') {
-        res = await getCategories(msg => context.log(msg));
+        res = await getCategories(logger);
+    } else if (action === 'getUserCats') {
+        res = await getUserToCategories(logger);
     } else if (action === 'saveFile') {
         if (!reqBody.amount) {
             return errorRsp('no amount');

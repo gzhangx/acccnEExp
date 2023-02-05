@@ -16,28 +16,48 @@ interface ILocalCats {
     name: string;
 }
 
+interface IUserToLocalCats  {    
+    user: string;
+    name: string;
+}
+
 interface INameBufAttachement {
     name: string;
     buffer: string;
 }
 
 
-export async function getCategories(logger: ILogger): Promise<ILocalCats[]> {
+async function getSheetData(logger: ILogger, fileName: string, sheetName: string) : Promise<string[][]> {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
-    const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {        
-        fileName: 'Documents/safehouse/empty2022expense.xlsx',
+    const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
+        fileName,
     });
-    const allSheet = await sheetOps.readAll('Table B');
+    const allSheet = await sheetOps.readAll(sheetName);
     const data = allSheet.values;
+    return data;
+}
+
+async function getLocalMissionRecordData(logger: ILogger, sheetName: string) {
+    return await getSheetData(logger, 'Documents/safehouse/localMissionRecords.xlsx', sheetName);
+}
+export async function getCategories(logger: ILogger): Promise<ILocalCats[]> {
+    //const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
+    //const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {        
+        //fileName: 'Documents/safehouse/empty2022expense.xlsx',
+    //});
+    //const allSheet = await sheetOps.readAll('Table B');
+    //const data = allSheet.values;
+    const dataOrig = await getLocalMissionRecordData(logger, 'Categaries');
+    const data = dataOrig.slice(1);
     const res: ILocalCats[] = [];
-    for (let i = 24; i <= 35; i++) {
-        const subCode = data[i][6];
-        const expCode = data[i][8];
-        const name = data[i][7];
-        res.push({
-            expCode,
-            name,
+    for (let i = 0; i < data.length; i++) {
+        const subCode = data[i][0];
+        const name = data[i][1];
+        const expCode = data[i][2];        
+        res.push({            
             subCode,
+            name,
+            expCode,
         })
         //console.log(`sc=${sc} exp=${exp} subCode=${subCode} expCode=${expCode}`)        
     }
@@ -63,6 +83,22 @@ export async function getCategories(logger: ILogger): Promise<ILocalCats[]> {
         }
     });
     */
+}
+
+export async function getUserToCategories(logger: ILogger): Promise<IUserToLocalCats[]> {
+    const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);    
+    const data = await getLocalMissionRecordData(logger, 'UserCats')    
+    const res: IUserToLocalCats[] = [];
+    for (let i = 0; i < data.length; i++) {
+        const user = data[i][0];        
+        const name = data[i][1];
+        res.push({
+            user,
+            name,
+        })
+        //console.log(`sc=${sc} exp=${exp} subCode=${subCode} expCode=${expCode}`)        
+    }
+    return res;
 }
 
 export interface ISubmitFileInterface{

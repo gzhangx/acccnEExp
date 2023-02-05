@@ -1,9 +1,18 @@
-import { submitFile, resubmitLine } from './localMissionFile'
+import { submitFile, resubmitLine, getUserToCategories } from './localMissionFile'
 
 import * as newGuestRegUtil from '../../acccnGuestRegistration/util'
 const logger = msg => console.log(msg);
 
 //newGuestRegTest();
+
+
+async function testGetCats() {
+    return getUserToCategories(x => console.log(x)).then(res => {
+        console.log(res);
+    })
+}
+
+
 
 async function newGuestRegTest() {
     const util = await newGuestRegUtil.getUtil('2022-04-25', console.log);
@@ -37,4 +46,5 @@ function testold() {
 }
 
 
-testold();
+//testold();
+testGetCats();
