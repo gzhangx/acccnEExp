@@ -17,8 +17,9 @@ interface ILocalCats {
 }
 
 interface IUserToLocalCats  {    
-    user: string;
-    name: string;
+    shortName: string;
+    fullName: string;
+    catName: string;
 }
 
 interface INameBufAttachement {
@@ -90,11 +91,13 @@ export async function getUserToCategories(logger: ILogger): Promise<IUserToLocal
     const data = await getLocalMissionRecordData(logger, 'UserCats')    
     const res: IUserToLocalCats[] = [];
     for (let i = 0; i < data.length; i++) {
-        const user = data[i][0];        
-        const name = data[i][1];
+        const shortName = data[i][0];        
+        const fullName = data[i][1];        
+        const catName = data[i][2];
         res.push({
-            user,
-            name,
+            shortName,
+            fullName,
+            catName,
         })
         //console.log(`sc=${sc} exp=${exp} subCode=${subCode} expCode=${expCode}`)        
     }
