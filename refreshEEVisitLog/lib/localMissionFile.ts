@@ -106,7 +106,7 @@ export async function getUserToCategories(logger: ILogger): Promise<IUserToLocal
 
 export interface ISubmitFileInterface{
     payeeName: string;
-    reimbursementCat: string;
+    reimbursementCat: ILocalCats;
     amount: string;
     description: string;
     attachements: INameBufAttachement[];
@@ -221,7 +221,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     const AMTCATS = await getCategories(logger);
     //console.log(AMTCATS);
 
-    const found = AMTCATS.find(c => c.name === reimbursementCat);    
+    const found = AMTCATS.find(c => c.name === reimbursementCat.name);    
     if (!found) {
         const err = { message: `not found ${reimbursementCat} ` };
         console.log(err.message);
