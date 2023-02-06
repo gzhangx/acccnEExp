@@ -3,7 +3,7 @@ import * as moment from 'moment-timezone';
 //const email = require('./nodemailer');
 import * as fs from 'fs';
 //const { fstat } = require('fs');
-import {msGraph} from "@gzhangx/googleapi"
+import {msGraph, sleep} from "@gzhangx/googleapi"
 import { IMsGraphCreds, IAuthOpt,IMsGraphDirPrms,IMsGraphExcelItemOpt} from "@gzhangx/googleapi/lib/msGraph/types";
 import { ILogger } from '@gzhangx/googleapi/lib/msGraph/msauth';
 import { getMSClientTenantInfo, treatFileName } from './ms'
@@ -129,15 +129,43 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
     row = 3;
     data[row][0] = replaceStrUnderlines(data[row][0], payeeName);
     const AMTPOS = 9;
-    for (let i = 24; i <= 35; i++) {
+
+    function* getCatRowIds() {
+        for (let i = 24; i <= 35; i++) {
+            yield i;
+        }
+    }
+    let foundReplacement = false;
+    for (let i of getCatRowIds()) {
         //const sc = parseInt(data[i][6]);
         //const exp = data[i][8];
         const cat = data[i][7];
         //console.log(`sc=${sc} exp=${exp} subCode=${subCode} expCode=${expCode}`)
         if (cat === found.name ) {            
             data[i][AMTPOS] = amount;
+            foundReplacement = true;
             break;
         }
+    }
+    if (!foundReplacement) {
+        console.log(`not found, finding by ${found.expCode} to ${found.name}`)
+        for (let i of getCatRowIds()) {
+            const sc = parseInt(data[i][6]);
+            const exp = parseInt(data[i][8]);
+            const cat = data[i][7];
+            
+            if (sc === parseInt(found.subCode) && exp === parseInt(found.expCode)) {
+                data[i][AMTPOS] = amount;
+                data[i][7] = found.name;
+                foundReplacement = true;
+                console.log(`not found, ffound by cat sc=${sc} exp=${exp} subCode=${sc} expCode=${exp}`)
+                break;
+            }
+        }   
+    }
+    if (!foundReplacement) {
+        console.log('Warning, not found!!!!!!!');
+        
     }
     data[48][AMTPOS] = amount;
     row = 50;
@@ -149,6 +177,7 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
     row = 53;
     data[row][0] = replaceStrUnderlines(data[row][0], 'Gang');
     data[row][submitDatePos] = replaceStrUnderlines(data[row][submitDatePos], date);
+    return foundReplacement;
 }
 
 const SAVE_DOC_ROOT = 'Documents/safehouse/safehouseRecords';
@@ -174,11 +203,13 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
     logger(found)
     logger(fileInfo)
     logger(today)
-    prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description, sheetRes.values);
-    logger('done prepareExpenseSheet, update range');
+    const properlyReplaced = prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description, sheetRes.values);
+    logger('done prepareExpenseSheet, update range ' + properlyReplaced);
     const origFileBuf = await msdirOps.getFileByPath(newFileFullPath);
     await sheetOps.updateRange('Table B', 'A1', `J${sheetRes.values.length}`, sheetRes.values);
     logger('done update range, get file by path ' + newFileFullPath);
+    logger('done update range, sleep 500 before get file by path');
+    await sleep(500);
     let newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
     logger(`got file content debRmOrigFileBuf ================> orig=${origFileBuf.length}, newF=${newFileBuf.length}`);
     for (let sizeCheck = 0; sizeCheck < 10; sizeCheck++) {
@@ -189,6 +220,7 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
     return {
         newFileBuf,
         msdirOps,
+        properlyReplaced,
     }
 }
 
@@ -331,13 +363,13 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
 
 
 
-    logger(`file generated`);
+    logger(`file generated newFileInfo=${newFileInfo.properlyReplaced}`);
     
     const message = {
         from: `"LocalMissionBot" <${emailUser}>`,
         //to: 'hebrewsofacccn@googlegroups.com',  //nodemailer settings, not used here
         to: ['gzhangx@hotmail.com'].concat(ccList||[]),
-        subject: `From ${payeeName} for ${found.name} Amount ${amount}`,
+        subject: `From ${payeeName} for ${found.name} Amount ${amount} ${newFileInfo.properlyReplaced?'':' WARNING failed to replace cat'}`,
         text: `
         Dear brother George,
         Please see the attached reimbursement request for ${payeeName}, thanks!
