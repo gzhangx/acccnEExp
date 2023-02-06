@@ -176,11 +176,16 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
     logger(today)
     prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description, sheetRes.values);
     logger('done prepareExpenseSheet, update range');
-    const debRmOrigFileBuf = await msdirOps.getFileByPath(newFileFullPath);
+    const origFileBuf = await msdirOps.getFileByPath(newFileFullPath);
     await sheetOps.updateRange('Table B', 'A1', `J${sheetRes.values.length}`, sheetRes.values);
     logger('done update range, get file by path ' + newFileFullPath);
-    const newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
-    logger(`got file content debRmOrigFileBuf orig=${debRmOrigFileBuf.length}, newF=${newFileBuf.length}`);
+    let newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
+    logger(`got file content debRmOrigFileBuf ================> orig=${origFileBuf.length}, newF=${newFileBuf.length}`);
+    for (let sizeCheck = 0; sizeCheck < 10; sizeCheck++) {
+        if (newFileBuf.length !== origFileBuf.length) break;
+        newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
+        logger(`got file content debRmOrigFileBuf ================> orig=${origFileBuf.length}, newF=${newFileBuf.length} at ${sizeCheck}`);
+    }
     return {
         newFileBuf,
         msdirOps,
