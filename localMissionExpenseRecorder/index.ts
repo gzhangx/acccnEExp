@@ -21,11 +21,13 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     const action = reqBody?.action || req.query.action;
     let res = null;
     const logger: ILogger = (...msg) => context.log(...msg);
+    logger(`invoked ${action}`);
     if (action === 'getCats') {
         res = await getCategories(logger);
     } else if (action === 'getUserCats') {
         res = await getUserToCategories(logger);
     } else if (action === 'saveFile') {
+        logger(`invoked ${action} ${reqBody.payeeName} ${reqBody.amount} ${reqBody.reimbursementCat}`);
         if (!reqBody.amount) {
             return errorRsp('no amount');
         }
@@ -39,7 +41,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         res = await submitFile({
             amount: reqBody.amount,
             description: reqBody.description,
-            logger: msg => context.log(msg),
+            logger,
             payeeName: reqBody.payeeName,
             reimbursementCat: reqBody.reimbursementCat,
             attachements: reqBody.attachements || [],
