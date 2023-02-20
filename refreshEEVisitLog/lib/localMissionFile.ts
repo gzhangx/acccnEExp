@@ -435,15 +435,15 @@ async function pmap<T, U>(items: T[], action: (data: T) => Promise<U>) {
     return res;
 }
 
-export async function resubmitLine(lineNum: number, logger: ILogger) {
+export async function resubmitLine(lineNum: number | string, logger: ILogger) {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
         fileName: 'Documents/safehouse/localMissionRecords.xlsx',
     });
     const YYYY = moment().format('YYYY');
     const allSheet = await sheetOps.readAll(YYYY);
-    const datas = allSheet.values;
-    const [today, amount, subCode, expCode, payeeName, description, category, sheetName, filesByComma] = datas[lineNum];
+    const datas = allSheet.values;    
+    const [today, amount, subCode, expCode, payeeName, description, category, sheetName, filesByComma] = datas[lineNum as number] || datas.find(d => d[10] === lineNum);
     const msdirOps = await msGraph.msdir.getMsDir(msGrapDirPrms);
 
     const imgAttachements = await pmap(filesByComma.split(',').filter(x => x), async fileName => {
