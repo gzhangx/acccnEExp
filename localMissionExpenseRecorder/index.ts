@@ -21,7 +21,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     const action = reqBody?.action || req.query.action;
     let res = null;
     const logger: ILogger = (...msg) => context.log(...msg);
-    logger(`invoked ${action}`);
+    logger(`invoked==========> ${action}`);
     if (action === 'getCats') {
         res = await getCategories(logger);
     } else if (action === 'getUserCats') {

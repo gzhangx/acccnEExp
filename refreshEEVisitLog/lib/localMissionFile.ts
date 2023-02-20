@@ -9,6 +9,7 @@ import { ILogger } from '@gzhangx/googleapi/lib/msGraph/msauth';
 import { getMSClientTenantInfo, treatFileName } from './ms'
 import { emailTransporter, emailUser} from './nodemailer'
 import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
+import {v1 as uuidv1} from 'uuid';
 
 interface ILocalCats {
     subCode: string;
@@ -124,7 +125,7 @@ function replaceStrUnderlines(orig: string, content: string) {
     return orig.substring(0, firstInd + start) + content + orig.substring(firstInd + start + content.length);
 }
 
-function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string, date: string, desc: string, data: string[][]) {
+function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string, date: string, desc: string, data: string[][], logger:ILogger) {
     let row = 50;
     row = 3;
     data[row][0] = replaceStrUnderlines(data[row][0], payeeName);
@@ -148,7 +149,7 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
         }
     }
     if (!foundReplacement) {
-        console.log(`not found, finding by ${found.expCode} to ${found.name}`)
+        logger(`not found, finding by ${found.expCode} to ${found.name}`)
         for (let i of getCatRowIds()) {
             const sc = parseInt(data[i][6]);
             const exp = parseInt(data[i][8]);
@@ -158,13 +159,13 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
                 data[i][AMTPOS] = amount;
                 data[i][7] = found.name;
                 foundReplacement = true;
-                console.log(`not found, ffound by cat sc=${sc} exp=${exp} subCode=${sc} expCode=${exp}`)
+                logger(`not found, ffound by cat sc=${sc} exp=${exp} subCode=${sc} expCode=${exp}`)
                 break;
             }
         }   
     }
     if (!foundReplacement) {
-        console.log('Warning, not found!!!!!!!');
+        logger('Warning, not found!!!!!!!');
         
     }
     data[48][AMTPOS] = amount;
@@ -189,7 +190,7 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
     //const newFileName = treatFileName(`${today}-${found.name}`);
     
     const newId = await msdirOps.copyItemByName('Documents/safehouse/empty2022expense.xlsx', newFileFullPath)
-    console.log('newFileId is ', newId);
+    logger('newFileId is ', newId);
     const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
         itemId: newId,
         //fileName: newFileFullPath,
@@ -200,10 +201,10 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
     //console.log(sheetRes.values);
     //sheetRes.values[50][0] = 'testtestesfaasdfadfaf';
     logger('prepareExpenseSheet');
-    logger(found)
-    logger(fileInfo)
+    logger('found',found)
+    logger('fileInfo',fileInfo)
     logger(today)
-    const properlyReplaced = prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description, sheetRes.values);
+    const properlyReplaced = prepareExpenseSheet(found, fileInfo.payeeName, fileInfo.amount, today, fileInfo.description, sheetRes.values, logger);
     logger('done prepareExpenseSheet, update range ' + properlyReplaced);
     const origFileBuf = await msdirOps.getFileByPath(newFileFullPath);
     await sheetOps.updateRange('Table B', 'A1', `J${sheetRes.values.length}`, sheetRes.values);
@@ -212,10 +213,27 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
     await sleep(500);
     let newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
     logger(`got file content debRmOrigFileBuf ================> orig=${origFileBuf.length}, newF=${newFileBuf.length}`);
+    let curNewFileSize = 0;
     for (let sizeCheck = 0; sizeCheck < 10; sizeCheck++) {
+        curNewFileSize = newFileBuf.length;
         if (newFileBuf.length !== origFileBuf.length) break;
         newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
         logger(`got file content debRmOrigFileBuf ================> orig=${origFileBuf.length}, newF=${newFileBuf.length} at ${sizeCheck}`);
+    }
+
+    await sleep(500);
+    newFileBuf = await msdirOps.getFileByPath(newFileFullPath);
+    for (let sizeCheck = 0; sizeCheck < 10; sizeCheck++) {
+        curNewFileSize = newFileBuf.length;
+        if (newFileBuf.length === curNewFileSize) {
+            logger(`newFileSizeCheck and orig are the same, file no longer grows ================> orig=${curNewFileSize}, newF=${newFileBuf.length} at ${sizeCheck}`);
+            curNewFileSize = newFileBuf.length;
+            break;
+        }
+        logger(`newFileSizeCheck and orig not the same, file still growing ================> orig=${curNewFileSize}, newF=${newFileBuf.length} at ${sizeCheck}`);
+        curNewFileSize = newFileBuf.length;
+        await sleep(500);
+        newFileBuf = await msdirOps.getFileByPath(newFileFullPath);        
     }
     return {
         newFileBuf,
@@ -256,6 +274,8 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     // const AMTX = 1220;
     // const AMTYSTART = 670;
     // const AMTYEND = 977;
+    const myId = uuidv1();
+    logger('SubmitFile, id =', myId);
     const AMTCATS = await getCategories(logger);
     //console.log(AMTCATS);
 
@@ -338,7 +358,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         actualNames.push(saveFn);
         await msdirOps.createFile(saveFn, att.content);
     }
-    const newRow = [today, amount, found.subCode, found.expCode, payeeName, useDesc, found.name, newFileFullPath, actualNames.join(','), files];
+    const newRow = [today, amount, found.subCode, found.expCode, payeeName, useDesc, found.name, newFileFullPath, actualNames.join(','), files, myId];
     vals.push(newRow);
     vals.forEach((vs, ind) => {
         if (vs.length === newRow.length) return;
