@@ -15,8 +15,9 @@ async function calculateEEVisitTimes(logger:ILogger) {
     logger('getting sheet')
     try {
         const sheet = await msGraph.msExcell.getMsExcel(prm, opt);
-        logger('got sheet done, reading sheet1')
-        const dataAll = await sheet.readAll('Sheet1');
+        const year = new Date().toISOString().substring(0, 4);
+        logger('got sheet done, reading (sheet1) ->' + year)
+        const dataAll = await sheet.readAll(year); //'Sheet1'
         logger('got sheet read sheet 1 done')
         logger(JSON.stringify(dataAll.text));
 
