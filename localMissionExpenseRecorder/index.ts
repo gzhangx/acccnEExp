@@ -23,9 +23,23 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     const logger: ILogger = (...msg) => context.log(...msg);
     logger(`invoked==========> ${action}`);
     if (action === 'getCats') {
-        res = await getCategories(logger);
+        try {
+            res = await getCategories(logger);
+        } catch (err) {
+            logger('Error getCats', err);
+            res = {
+                message: err.message,
+            }
+        }
     } else if (action === 'getUserCats') {
-        res = await getUserToCategories(logger);
+        try {
+            res = await getUserToCategories(logger);        
+        } catch (err) {
+            logger('Error getUserCats', err);
+            res = {
+                message: err.message,
+            }
+        }        
     } else if (action === 'saveFile') {
         logger(`invoked ${action} ${reqBody.payeeName} ${reqBody.amount} ${reqBody.reimbursementCat}`);
         if (!reqBody.amount) {
