@@ -6,7 +6,7 @@ import { getMsDirClientPrms, generateRefreshTokenCode, getRefreshToken } from '.
 
 
 async function calculateEEVisitTimes(logger:ILogger) {
-    const prm: IMsGraphDirPrms = getMsDirClientPrms('https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/%E4%B8%89%E7%A6%8F%E6%8E%A2%E8%AE%BF%E8%AE%B0%E5%BD%95.xlsx?d=wf3a17698953344988a206fbe0fecded5&csf=1&web=1&e=sMhg4O',
+    const prm: IMsGraphDirPrms = getMsDirClientPrms('https://acccnusa.sharepoint.com/:x:/r/sites/LocalMission/_layouts/15/Doc.aspx?sourcedoc=%7B8D63AFAA-9357-4D71-9C38-CC8DBBB15B19%7D&file=%E4%B8%89%E7%A6%8F%E6%8E%A2%E8%AE%BF%E8%AE%B0%E5%BD%95.xlsx&action=default&mobileredirect=true&cid=f9aca124-712b-4ea0-afd5-ea5674276928',
         logger);
     const opt: IMsGraphExcelItemOpt = {
         //itemId: '01XX2KYFMYO2Q7GM4VTBCIUIDPXYH6ZXWV',
