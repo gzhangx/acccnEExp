@@ -181,7 +181,7 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
     return foundReplacement;
 }
 
-const SAVE_DOC_ROOT = 'Documents/safehouse/safehouseRecords';
+const SAVE_DOC_ROOT = 'savedRecords';
 async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: string, fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: ILogger) {
     logger('fixing file');
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
@@ -189,7 +189,7 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
     msGrapDirPrms.driveId = msdirOps.driveId;
     //const newFileName = treatFileName(`${today}-${found.name}`);
     
-    const newId = await msdirOps.copyItemByName('Documents/safehouse/empty2022expense.xlsx', newFileFullPath)
+    const newId = await msdirOps.copyItemByName('empty2022expense.xlsx', newFileFullPath)
     logger('newFileId is ', newId);
     const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
         itemId: newId,
@@ -245,7 +245,7 @@ async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: 
 function getGraphDirPrms(logger: ILogger) {
     const msGrapDirPrms: IMsGraphDirPrms = {
         creds: getMSClientTenantInfo(logger),
-        sharedUrl: 'https://acccnusa-my.sharepoint.com/:x:/r/personal/gangzhang_acccn_org/Documents/Documents/safehouse/empty2022expense.xlsx?d=w1a9a3f0fe89a4f9f93314efc910315fd&csf=1&web=1&e=WSHzge',
+        sharedUrl: 'https://acccnusa.sharepoint.com/:x:/r/sites/LocalMission/_layouts/15/Doc.aspx?sourcedoc=%7BBE9B5D2A-2618-41CA-A7F7-660D68F641CB%7D&file=empty2022expense.xlsx&action=default&mobileredirect=true',
     }
     return msGrapDirPrms;
 }
@@ -253,7 +253,7 @@ function getGraphDirPrms(logger: ILogger) {
 async function getSheetOps(logger:ILogger) {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
-        fileName: 'Documents/safehouse/localMissionRecords.xlsx',
+        fileName: '/localMissionRecords.xlsx',
     });
     return {
         sheetOps,
