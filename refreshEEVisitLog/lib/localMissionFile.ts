@@ -40,7 +40,7 @@ async function getSheetData(logger: ILogger, fileName: string, sheetName: string
 }
 
 async function getLocalMissionRecordData(logger: ILogger, sheetName: string) {
-    return await getSheetData(logger, 'Documents/safehouse/localMissionRecords.xlsx', sheetName);
+    return await getSheetData(logger, 'localMissionRecords.xlsx', sheetName);
 }
 export async function getCategories(logger: ILogger): Promise<ILocalCats[]> {
     //const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
@@ -253,7 +253,7 @@ function getGraphDirPrms(logger: ILogger) {
 async function getSheetOps(logger:ILogger) {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
-        fileName: '/localMissionRecords.xlsx',
+        fileName: 'localMissionRecords.xlsx',
     });
     return {
         sheetOps,
@@ -438,7 +438,7 @@ async function pmap<T, U>(items: T[], action: (data: T) => Promise<U>) {
 export async function resubmitLine(lineNum: number | string, logger: ILogger) {
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
-        fileName: 'Documents/safehouse/localMissionRecords.xlsx',
+        fileName: 'localMissionRecords.xlsx',
     });
     const YYYY = moment().format('YYYY');
     const allSheet = await sheetOps.readAll(YYYY);
