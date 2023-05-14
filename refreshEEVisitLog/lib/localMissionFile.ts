@@ -183,10 +183,10 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
 
 const SAVE_DOC_ROOT = 'savedRecords';
 async function processRequestTemplateXlsx(msdirOps: IMsDirOps, newFileFullPath: string, fileInfo: ISubmitFileInterface, today:string, found:ILocalCats, logger: ILogger) {
-    logger('fixing file');
+    logger('fixing file', newFileFullPath);
     const msGrapDirPrms: IMsGraphDirPrms = getGraphDirPrms(logger);
     //const msdirOps = await msGraph.msdir.getMsDir(getMSClientTenantInfo(), msGrapDirPrms);
-    msGrapDirPrms.driveId = msdirOps.driveId;
+    msGrapDirPrms.driveInfo = msdirOps.driveInfo;
     //const newFileName = treatFileName(`${today}-${found.name}`);
     
     const newId = await msdirOps.copyItemByName('empty2022expense.xlsx', newFileFullPath)

@@ -20,7 +20,7 @@ function getGuestRegCacheFile() {
 }
 
 interface IGuestRegCacheInfo {
-    driveId: string;
+    driveInfo: any;
     newGuestXlsxItemId: string;
     today: string;
 }
@@ -66,13 +66,13 @@ export async function getUtil(today: string, logger: ILogger) {
         logger);
     
     
-    if (!cache.driveId) {
+    if (!cache.driveInfo) {
         logger('Start load driveId');
         const ops = await getMsDirOpt();
-        cache.driveId = msGraphPrms.driveId = ops.driveId;
-        saveCache(`msGraphPrms loaded drive id=${msGraphPrms.driveId}`);
+        cache.driveInfo = msGraphPrms.driveInfo = ops.driveInfo;
+        saveCache(`msGraphPrms loaded drive id=${msGraphPrms.driveInfo.driveId}`);
     }
-    msGraphPrms.driveId = cache.driveId;
+    msGraphPrms.driveInfo = cache.driveInfo;
     async function getMsDirOpt() {
         const ops = await msGraph.msdir.getMsDir(msGraphPrms);
         return ops;

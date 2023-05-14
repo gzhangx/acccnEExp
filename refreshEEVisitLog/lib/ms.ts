@@ -51,7 +51,6 @@ export function getMsDirClientPrms(sharedUrl: string, logger:ILogger) {
     const prm: IMsGraphDirPrms = {
         creds: getMSClientTenantInfo(logger),
         sharedUrl,
-        driveId: '',
     };
     return prm;
 }
