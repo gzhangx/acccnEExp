@@ -223,7 +223,7 @@ async function sendSheetNoticeInner(opts: SendSeehtNoticeParms, steps: string[])
   //console.log(found);  
 
   const message = {
-    from: '"HebrewsBot" <gzhangx@gmail.com>',
+    from: `"HebrewsBot" <${mailTool.emailUser}>`,
     //to: 'hebrewsofacccn@googlegroups.com',  //nodemailer settings, not used here
     to: '',
     subject: 'NA',
