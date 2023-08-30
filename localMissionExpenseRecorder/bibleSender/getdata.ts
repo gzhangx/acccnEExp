@@ -1,12 +1,13 @@
 ﻿'use strict';
 
-import * as fs from 'fs';
 import * as moment from 'moment-timezone';
 
 import { emailTransporter, emailUser } from './nodemailer';
 
-const DEFAULT_SCHEDULE_FILE = `${__dirname}/data/schedule.txt`;
-const BIBLE_TEXT_FILE = `${__dirname}/data/bibleUTF8.txt`;
+//const DEFAULT_SCHEDULE_FILE = `${__dirname}/data/schedule.txt`;
+//const BIBLE_TEXT_FILE = `${__dirname}/data/bibleUTF8.txt`;
+import * as bibleData from './data/bibleData';
+import * as schedule from './data/schedule';
 
 //const schedule = require('./schedule');
 //const dailyparts = require('./dailyparts');
@@ -50,10 +51,14 @@ type JsonSchedule = {
         }
     }
 }
-function ScheduleToJson(scheduleTxt = DEFAULT_SCHEDULE_FILE) : JsonSchedule {
-    console.log(`using  schedule ${scheduleTxt}`);
-    const data = fs.readFileSync(scheduleTxt, 'utf8').toString();
-    const lines = data.split('\n');
+
+//scheduleTxt = DEFAULT_SCHEDULE_FILE
+function ScheduleToJson(scheduleLines?: string[]) : JsonSchedule {
+    //console.log(`using  schedule ${scheduleTxt}`);
+    //const data = fs.readFileSync(scheduleTxt, 'utf8').toString();
+    //const lines = data.split('\n');
+    //fs.writeFileSync('schedule.json', JSON.stringify(lines));
+    const lines = scheduleLines || schedule.schedule;
     const startDate = moment.tz(lines[0].trim(),'EST').format('YYYY-MM-DD');
     const res: JsonSchedule = {startDate, schedule:[], verses: {}};
     let pos = 0;
@@ -74,9 +79,10 @@ function ScheduleToJson(scheduleTxt = DEFAULT_SCHEDULE_FILE) : JsonSchedule {
 }
 
 function getTodayData(today: moment.Moment, scheduleData: JsonSchedule) {
-    const bibleData = fs.readFileSync(BIBLE_TEXT_FILE, 'utf8').toString().split('\n');
+    //const bibleData = fs.readFileSync(BIBLE_TEXT_FILE, 'utf8').toString().split('\n');
+    //fs.writeFileSync('bibleData.json', JSON.stringify(bibleData));
    const searches = GetTodaysSearch(today, scheduleData);
-    const data = GetOutput(bibleData, searches.Verses);
+    const data = GetOutput(bibleData.bibleData, searches.Verses);
     const ret = {
         subject: searches.subject.trim().replace(/ /g, ''),
         data
@@ -236,10 +242,8 @@ function GetOutput(all, shows) {
     return sb;
 }
 
-function loadData(today: moment.Moment, scheduleFileName?:string) {
-
-    const scheduleData = ScheduleToJson(scheduleFileName);
-    const days = getDaysOffset(today, scheduleData);
+function loadData(today: moment.Moment, scheduleLines?:string[]) {
+    const scheduleData = ScheduleToJson(scheduleLines);
     return getTodayData(today, scheduleData)
 
 }
