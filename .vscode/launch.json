@@ -2,6 +2,7 @@
   "version": "0.2.0",
   "configurations": [
 
+
     {
       "name": "doTest",
       "program": "${workspaceFolder}/dist/refreshEEVisitLog/lib/test.js",
@@ -18,6 +19,19 @@
       "request": "attach",
       "port": 9229,
       "preLaunchTask": "func: host start"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run test.ts",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}\\test.ts",
+      "preLaunchTask": "tsc: build - tsconfig.json",
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ]
     }
   ]
 }
