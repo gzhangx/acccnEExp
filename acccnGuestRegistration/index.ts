@@ -5,7 +5,7 @@ import { IMsGraphCreds, IAuthOpt, IMsGraphDirPrms, IMsGraphExcelItemOpt } from "
 import { getMsDirClientPrms } from '../refreshEEVisitLog/lib/ms'
 import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
 import { delay } from "@gzhangx/googleapi/lib/msGraph/msauth";
-import * as moment from 'moment-timezone'
+import moment from 'moment-timezone'
 
 import * as localUtil from './util'
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {

@@ -55,7 +55,7 @@ export async function getUtil(today: string, logger: ILogger) {
     }
 
     function addPathToImg(fname: string) {
-        const todayMoment = moment(today);
+        const todayMoment = moment.default(today);
         const quarter = Math.floor(((todayMoment.month() + 1) % 12) / 3 + 1);
         const year = todayMoment.format('YYYY');
         if (!fname) return fname;

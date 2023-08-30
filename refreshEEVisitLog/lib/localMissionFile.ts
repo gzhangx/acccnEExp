@@ -1,9 +1,9 @@
 //const Jimp = require('jimp');
-import * as moment from 'moment-timezone';
+import * as moment from 'moment';
 //const email = require('./nodemailer');
 import * as fs from 'fs';
 //const { fstat } = require('fs');
-import {msGraph, sleep} from "@gzhangx/googleapi"
+import {msGraph, util} from "@gzhangx/googleapi"
 import { IMsGraphCreds, IAuthOpt,IMsGraphDirPrms,IMsGraphExcelItemOpt} from "@gzhangx/googleapi/lib/msGraph/types";
 import { ILogger } from '@gzhangx/googleapi/lib/msGraph/msauth';
 import { getMSClientTenantInfo, treatFileName } from './ms'
@@ -11,6 +11,7 @@ import { emailTransporter, emailUser} from './nodemailer'
 import { IMsDirOps } from '@gzhangx/googleapi/lib/msGraph/msdir';
 import {v1 as uuidv1} from 'uuid';
 
+const sleep = util.sleep;
 interface ILocalCats {
     subCode: string;
     expCode: string;
@@ -286,7 +287,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
         return err;
     }
     
-    const nowMoment = moment();
+    const nowMoment = moment.default();
     const today = nowMoment.format('YYYY-MM-DD');
     const toddayWithSec = nowMoment.format('YYYY-MM-DD-HHmmss');
     // console.log(`amtPos=${amtPos} ${today}`);
@@ -305,7 +306,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     //     //.greyscale() // set greyscale
     //     .write('./temp/accchForm.jpg'); // save
     
-    const YYYY = moment().format('YYYY');
+    const YYYY = moment.default().format('YYYY');
     const SAVE_DOC_ROOT_YYYY = `${SAVE_DOC_ROOT}/${YYYY}`;
 
     const {
@@ -440,7 +441,7 @@ export async function resubmitLine(lineNum: number | string, logger: ILogger) {
     const sheetOps = await msGraph.msExcell.getMsExcel(msGrapDirPrms, {
         fileName: 'localMissionRecords.xlsx',
     });
-    const YYYY = moment().format('YYYY');
+    const YYYY = moment.default().format('YYYY');
     const allSheet = await sheetOps.readAll(YYYY);
     const datas = allSheet.values;    
     const [today, amount, subCode, expCode, payeeName, description, category, sheetName, filesByComma] = datas[lineNum as number] || datas.find(d => d[10] === lineNum);
@@ -491,7 +492,7 @@ export async function resubmitLine(lineNum: number | string, logger: ILogger) {
 }
 
 export async function updateSums(logger:ILogger) {
-    const nowMoment = moment();
+    const nowMoment = moment.default();
     const sheetName = nowMoment.format('YYYY');
     logger(`reading sheet ${sheetName}`);
     const {
