@@ -113,16 +113,25 @@ function createMessage2021(templateAll: TemplateData, first: ScheduleData, have:
     },
     {
       name: '_dayOfWeek',
-      val: templateAll.curDate.getDay().toString(),
+      val: moment(dateVal).weekday().toString(),
     },
   ];
 
-    
+  const template = templateAll.template[have] as SubjectText;
+  const ownerColRegRes = template.text.match(/\$\{address\(([A-Z])\)}/);
+
+  const ownerCol = (ownerColRegRes && ownerColRegRes[1]) ? ownerColRegRes[1] : null;
+  const owner = ownerCol?getRowDataByLetter(ownerCol):null;
+  const ownerAddress = ownerCol?ownerLookup(owner, 'address'):'';
   const rpls = [
     (data: string) => map.reduce((acc, cur) => {
       return acc.replace(`\${${cur.name}}`, cur.val);
     }, data),
     (data: string) => data.replace(new RegExp('[$]{([A-Z])}', 'gi'), (...m) => {
+      if (m[1] === ownerCol) {
+        if (ownerAddress) return `${owner}家`
+        return owner;
+      }
       return getRowDataByLetter(m);
     }),
   ...['address', 'additionalInformation'].map(name =>
@@ -133,9 +142,9 @@ function createMessage2021(templateAll: TemplateData, first: ScheduleData, have:
           return `教会${m[1]}教室`
         }
       }
-      const owner = getRowDataByLetter(m);
+      //const owner = getRowDataByLetter(m);
       const ret = ownerLookup(owner, name);
-      if (name === 'address' && !ret) {
+      if (name === 'address' && !ownerAddress) {
         return `Can't find address for ${openHomeOwner}`;
       }
       return ret;
@@ -143,7 +152,7 @@ function createMessage2021(templateAll: TemplateData, first: ScheduleData, have:
   ),
   ];
 
-  const template = templateAll.template[have] as SubjectText;
+  
   const ret = mapValues(template, flow(rpls));
   return ret;
 }
