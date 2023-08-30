@@ -9,12 +9,6 @@ async function readValues(range: string) {
   const ret = await ops.readData(range);
   return ret.data;
 }
-async function test(days = 0) {
-  const start = moment();
-  for(let i = 0; i < 1;i++) {
-    await checkSheetNotice(start.add(days, 'days').toDate(), true);
-  }
-}
 
 const addrToPos = (x:string) => x.charCodeAt(0) - 65;
 //return test();
@@ -96,7 +90,7 @@ type ScheduleData = {
   row: string[];
 }
 
-export function createMessage2021(templateAll: TemplateData, first: ScheduleData, have: string) {
+function createMessage2021(templateAll: TemplateData, first: ScheduleData, have: string) {
   const getRowData = (who: number) => first.row[who] || 'NA';
   const getRowDataByLetter = (x: string | string[]) => getRowData(addrToPos(x[1] || x[0]));
   const openHomeOwner = getRowDataByLetter('F');
@@ -154,9 +148,36 @@ export function createMessage2021(templateAll: TemplateData, first: ScheduleData
   return ret;
 }
 
-export async function checkSheetNotice(curDateD = new Date(), sendEmail = true) {
-  console.log(`${curDateD} sendEmail=${sendEmail}`);
-  const curDate = moment(curDateD).startOf('day');
+
+type Logger = (...args) => void;
+type SendSeehtNoticeParms = {
+  curDateD?: Date;
+  sendEmail?: 'Y' | 'N';
+  logger: Logger;  
+}
+
+export async function sendSheetNotice(opts: SendSeehtNoticeParms) {
+  const steps: string[] = [];
+  try {
+    const res = await sendSheetNoticeInner(opts, steps);
+    return res;
+  } catch (err) {
+    return {
+      steps,
+      error: err.message,
+    }
+  }
+}
+
+async function sendSheetNoticeInner(opts: SendSeehtNoticeParms, steps: string[]) {
+  const logInfo = (...args) => {
+    steps.push(args[0]);
+    opts.logger(...args);
+  }
+  if (!opts.curDateD) opts.curDateD = new Date();
+  logInfo(`${opts.curDateD} sendEmail=${opts.sendEmail}`);
+  const curDate = moment(opts.curDateD).startOf('day');
+  logInfo(`${curDate.format('YYYY-MM-DD')} sendEmail=${opts.sendEmail}`);
   const valuesRange = ['A', 'L'];  
   const columnNames: string[] = [];
   for (let cnt = valuesRange[0].charCodeAt(0); cnt <= valuesRange[1].charCodeAt(0); cnt++) {
@@ -190,6 +211,7 @@ export async function checkSheetNotice(curDateD = new Date(), sendEmail = true) 
     }).filter(x => x);
   });
 
+  logInfo(`scheduleData len=${scheduleData.length}`);
   const found = scheduleData.reduce((acc, d) => {
     if (acc) return acc;
     if (d.date.isSameOrAfter(curDate)) return {
@@ -207,16 +229,24 @@ export async function checkSheetNotice(curDateD = new Date(), sendEmail = true) 
     subject: 'NA',
     text: 'NA',
   };
-  const template = await getTemplateData(curDateD);
+  const template = await getTemplateData(opts.curDateD);
   message.to = template.toAddrs.join(',');
   const messageData = createMessage2021(template, found, found.diff < 7 ? 'have' : 'havenot');
   Object.assign(message, messageData);
-  console.log(message.to);
-  console.log(message.subject);
-  console.log(message.text);  
+  logInfo(message.to);
+  logInfo(message.subject);
+  logInfo(message.text);  
   
-  if (!sendEmail) return message;
+  if (opts.sendEmail === 'N') return {
+    message,
+    steps,
+  };
+  const mailResult = await mailTool.emailTransporter.sendMail(message);
   //email.sendGmail(message);
-  return message;
+  return {
+    message,
+    steps,
+    mailResult,
+  };
 }
 

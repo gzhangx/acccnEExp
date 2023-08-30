@@ -1,6 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import { ILogger } from "@gzhangx/googleapi/lib/msGraph/msauth";
 import * as bibleSender from './bibleSender/getdata';
+import * as hebrewsSender from './hebrewsFellowshipScheduleSender/sendHebrewsWeeklyEmail';
 
 import { submitFile, getCategories, updateSums, getUserToCategories } from '../refreshEEVisitLog/lib/localMissionFile'
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
@@ -52,6 +53,20 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             logger('Error sendHebrewsDailyEmail', err);
             res = {
                 message: err.message,
+            }
+        }
+    } else if (action === 'sendHebrewsWeeklyMeetingScheduleEmail') {
+        try {            
+            res = await hebrewsSender.sendSheetNotice({
+                logger: context.log,
+            });
+        } catch (err) {
+            logger('Error sendHebrewsWeeklyMeetingScheduleEmail', err);
+            res = {
+                message: err.message,
+            }
+            if (err.steps) {
+                res.steps = err.steps;
             }
         }
     } else if (action === 'saveFile') {
