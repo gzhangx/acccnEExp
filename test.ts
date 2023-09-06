@@ -4,6 +4,7 @@ async function test() {
 
     const test = await sendWeek.sendSheetNotice({
         logger: console.log,
+        sendEmail: 'N',
     });
     console.log(test);
     const got = await dailySender.sendBibleData({
