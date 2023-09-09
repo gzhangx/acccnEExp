@@ -13,6 +13,9 @@ https://zealous-mud-070999d0f.3.azurestaticapps.net/?cat=lm
 https://localmissionexpenserecorder.azurewebsites.net/api/refreshEEVisitLog?code=CLGkjcJz4RA-iGdMjP3algH9__1ggLMgtPAXckXviWjjAzFuvLJQaA==  to refresh EE visit
 
 
+send weekly meeting eamil
+https://localmissionexpenserecorder.azurewebsites.net/api/localMissionExpenseRecorder?code=cfAezr14dTRJQaWq4ODxL4Bz9mWkbhievOXHKXVUW8BrAzFugCA24w==&action=sendHebrewsWeeklyMeetingScheduleEmail
+
 to update local, copy token and update D:\home\data\Functions\sampledata\refreshEEVisitLog.json
 {
     "refresh_token":""
