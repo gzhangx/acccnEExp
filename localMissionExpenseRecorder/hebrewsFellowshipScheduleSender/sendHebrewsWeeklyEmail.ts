@@ -90,6 +90,16 @@ type ScheduleData = {
   row: string[];
 }
 
+
+function getLookupOwner(owner:string) {
+  const churchNumber = owner.match(/(教会){0,1}(?<number>\d+)(教室){0,1}/)?.groups?.number;
+  const lookupOwnerName = churchNumber ? '教会' : owner;
+  const displayOwnerHomeName = churchNumber ? `教会${churchNumber}教室` : `${owner}家`;
+  return {
+    lookupOwnerName,
+    displayOwnerHomeName,
+  }
+}
 function createMessage2021(templateAll: TemplateData, first: ScheduleData, have: string) {
   const getRowData = (who: number) => first.row[who] || 'NA';
   const getRowDataByLetter = (x: string | string[]) => getRowData(addrToPos(x[1] || x[0]));
@@ -100,7 +110,7 @@ function createMessage2021(templateAll: TemplateData, first: ScheduleData, have:
   if (offLine.toUpperCase() === 'YES') {
     have += 'Offline'
   }
-  const ownerLookup = (openHomeowner: string, name: string) => get(templateAll, `names[${openHomeOwner}].${name}`, '');
+  const ownerLookup = (ownerName: string, name: string) => get(templateAll, `names[${ownerName}].${name}`, '');
   //const additionalInformation = get(templateAll, `names[${openHomeOwner}.additionalInformation`,'');  
   const map = [
     {
@@ -121,33 +131,29 @@ function createMessage2021(templateAll: TemplateData, first: ScheduleData, have:
   const ownerColRegRes = template.text.match(/\$\{address\(([A-Z])\)}/);
 
   const ownerCol = (ownerColRegRes && ownerColRegRes[1]) ? ownerColRegRes[1] : null;
-  const owner = ownerCol?getRowDataByLetter(ownerCol):null;
-  const ownerAddress = ownerCol?ownerLookup(owner, 'address'):'';
+  const owner = ownerCol ? getRowDataByLetter(ownerCol) : '';
+  
+  const {  lookupOwnerName, displayOwnerHomeName } = getLookupOwner(owner);  
+  
+
   const rpls = [
     (data: string) => map.reduce((acc, cur) => {
       return acc.replace(`\${${cur.name}}`, cur.val);
     }, data),
     (data: string) => data.replace(new RegExp('[$]{([A-Z])}', 'gi'), (...m) => {
-      if (m[1] === ownerCol) {
-        if (ownerAddress) return `${owner}家`
-        return owner;
+      if (m[1] === ownerCol) {        
+        return displayOwnerHomeName;
       }
       return getRowDataByLetter(m);
     }),
   ...['address', 'additionalInformation'].map(name =>
     (data: string) => data.replace(new RegExp(`[$]{${name}[(]([A-Z])[)]}`, 'gi'), (...m) => {
-      if (name === 'address') {
-        if (m[1].indexOf('教会') >= 0) return m[1];
-        if (m[1].match(/\d/)) {
-          return `教会${m[1]}教室`
-        }
+      //const owner = getRowDataByLetter(m);      
+      const lookupInfo = ownerLookup(lookupOwnerName, name);
+      if (name === 'address' && !lookupInfo) {
+        return `Can't find address for ${lookupOwnerName}`;
       }
-      //const owner = getRowDataByLetter(m);
-      const ret = ownerLookup(owner, name);
-      if (name === 'address' && !ownerAddress) {
-        return `Can't find address for ${openHomeOwner}`;
-      }
-      return ret;
+      return lookupInfo;
     })
   ),
   ];
