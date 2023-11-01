@@ -4,7 +4,7 @@
 
 
     {
-      "name": "doTest",
+      "name": "doTest Expense",
       "program": "${workspaceFolder}/dist/refreshEEVisitLog/lib/test.js",
       "request": "launch",
       "skipFiles": [
