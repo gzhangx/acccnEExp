@@ -386,10 +386,14 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
 
     logger(`file generated newFileInfo=${newFileInfo.properlyReplaced}`);
     
+    const emailsAry = await getLocalMissionRecordData(logger, 'emails');
+    logger(`email lists`, emailsAry);
+    const emailTo = emailsAry.map(e => e[0]);
+    logger(`email lists To `, emailTo);
     const message = {
         from: `"LocalMissionBot" <${emailUser}>`,
         //to: 'hebrewsofacccn@googlegroups.com',  //nodemailer settings, not used here
-        to: ['gzhangx@hotmail.com','guangsentian@gmail.com'].concat(ccList||[]),
+        to: emailTo.concat(ccList||[]),
         subject: `From ${payeeName} for ${found.name} Amount ${amount} ${newFileInfo.properlyReplaced?'':' WARNING failed to replace cat'}`,
         text: `
         Dear brother George,
