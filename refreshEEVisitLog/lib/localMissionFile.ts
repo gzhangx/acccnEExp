@@ -389,7 +389,7 @@ export async function submitFile(submitFileInfo: ISubmitFileInterface) {
     const message = {
         from: `"LocalMissionBot" <${emailUser}>`,
         //to: 'hebrewsofacccn@googlegroups.com',  //nodemailer settings, not used here
-        to: ['gzhangx@hotmail.com'].concat(ccList||[]),
+        to: ['gzhangx@hotmail.com','guangsentian@gmail.com'].concat(ccList||[]),
         subject: `From ${payeeName} for ${found.name} Amount ${amount} ${newFileInfo.properlyReplaced?'':' WARNING failed to replace cat'}`,
         text: `
         Dear brother George,
