@@ -84,10 +84,14 @@ async function getTemplateData(curDate: Date): Promise<TemplateData> {
   }
 }
 
+type StringDict = {
+  [name: string]: string;
+};
+
 type ScheduleData = {
   date: string;
   diff: number;
-  row: string[];
+  row: StringDict;
 }
 
 
@@ -101,61 +105,39 @@ function getLookupOwner(owner:string) {
   }
 }
 function createMessage2021(templateAll: TemplateData, first: ScheduleData, have: string) {
-  const getRowData = (who: number) => first.row[who] || 'NA';
-  const getRowDataByLetter = (x: string | string[]) => getRowData(addrToPos(x[1] || x[0]));
-  const openHomeOwner = getRowDataByLetter('F');
-  const timeVal = getRowDataByLetter('B');
-  const dateVal = getRowDataByLetter('A');
-  const offLine = getRowDataByLetter('D');
+  const getRowData = (who: string) => first.row[who] || 'NA';
+  
+  
+  const dateVal = getRowData('日期');
+  const offLine = getRowData('聚会地点');
   if (offLine.toUpperCase() === 'YES') {
     have += 'Offline'
   }
   const ownerLookup = (ownerName: string, name: string) => get(templateAll, `names[${ownerName}].${name}`, '');
   //const additionalInformation = get(templateAll, `names[${openHomeOwner}.additionalInformation`,'');  
-  const map = [
-    {
-      name: '_time',
-      val: timeVal,
-    },
-    {
-      name: '_date',
-      val: dateVal,
-    },
-    {
-      name: '_dayOfWeek',
-      val: moment(dateVal).weekday().toString(),
-    },
-  ];
+  first.row['_dayOfWeek'] = ['日', '一', '二', '三', '四', '五', '六'][moment(dateVal).weekday()];    
 
   const template = templateAll.template[have] as SubjectText;
-  const ownerColRegRes = template.text.match(/\$\{address\(([A-Z])\)}/);
+  const ownerColRegRes = template.text.match(/\$\{address\((.+)\)}/);
 
-  const ownerCol = (ownerColRegRes && ownerColRegRes[1]) ? ownerColRegRes[1] : null;
-  const owner = ownerCol ? getRowDataByLetter(ownerCol) : '';
+  const ownerColFromAddr = (ownerColRegRes && ownerColRegRes[1]) ? ownerColRegRes[1] : null;
+  const ownerCol = '聚会地点'
+  if (ownerColFromAddr !== ownerCol && ownerColFromAddr) {
+    console.log(`Warning, owner col ${ownerColFromAddr} is not ${ownerCol}`);
+  }
+  const owner = getRowData(ownerCol);
   
   const {  lookupOwnerName, displayOwnerHomeName } = getLookupOwner(owner);  
-  
+  first.row['聚会地点'] = displayOwnerHomeName;
+  const lookupInfo = ownerLookup(lookupOwnerName, 'address');
+  first.row['address'] = lookupInfo ? lookupInfo : `Can't find address for ${lookupOwnerName}`;
+  const additionalInformation = ownerLookup(lookupOwnerName, 'additionalInformation');
+  first.row['additionalInformation'] = additionalInformation || '';
 
   const rpls = [
-    (data: string) => map.reduce((acc, cur) => {
-      return acc.replace(`\${${cur.name}}`, cur.val);
-    }, data),
-    (data: string) => data.replace(new RegExp('[$]{([A-Z])}', 'gi'), (...m) => {
-      if (m[1] === ownerCol) {        
-        return displayOwnerHomeName;
-      }
-      return getRowDataByLetter(m);
+    (data: string) => data.replace(new RegExp('[$]{([^{}]+)}', 'gi'), (...m) => {    
+      return getRowData(m[1]);
     }),
-  ...['address', 'additionalInformation'].map(name =>
-    (data: string) => data.replace(new RegExp(`[$]{${name}[(]([A-Z])[)]}`, 'gi'), (...m) => {
-      //const owner = getRowDataByLetter(m);      
-      const lookupInfo = ownerLookup(lookupOwnerName, name);
-      if (name === 'address' && !lookupInfo) {
-        return `Can't find address for ${lookupOwnerName}`;
-      }
-      return lookupInfo;
-    })
-  ),
   ];
 
   
@@ -192,15 +174,22 @@ async function sendSheetNoticeInner(opts: SendSeehtNoticeParms, steps: string[])
   if (!opts.curDateD) opts.curDateD = new Date();
   logInfo(`${opts.curDateD} sendEmail=${opts.sendEmail}`);
   const curDate = moment(opts.curDateD).startOf('day');
-  logInfo(`${curDate.format('YYYY-MM-DD')} sendEmail=${opts.sendEmail}`);
+  const sheetName = `${curDate.format('YYYY') }行事历`
+  logInfo(`${sheetName} ${curDate.format('YYYY-MM-DD')} sendEmail=${opts.sendEmail}`);
   const valuesRange = ['A', 'L'];  
-  const columnNames: string[] = [];
-  for (let cnt = valuesRange[0].charCodeAt(0); cnt <= valuesRange[1].charCodeAt(0); cnt++) {
-    columnNames.push(String.fromCharCode(cnt));
-  }
-  const scheduleData = await readValues(`'Schedule'!${valuesRange[0]}:${valuesRange[1]}`).then(r => {    
-    return r.map(d => {
-      const dateStr = d[0];
+  
+  //for (let cnt = valuesRange[0].charCodeAt(0); cnt <= valuesRange[1].charCodeAt(0); cnt++) {
+  //  columnNames.push(String.fromCharCode(cnt));
+  //}
+
+  const scheduleData = await readValues(`'${sheetName}'!${valuesRange[0]}:${valuesRange[1]}`).then(r => {    
+    const columnNames: string[] = r[1].map(r => r);
+    return r.map(curRow => {
+      const cur = columnNames.reduce((acc, name, i) => { 
+        acc[name] = curRow[i];
+        return acc;
+      }, {} as StringDict);
+      const dateStr = cur['日期'];
       if (!dateStr) return;
       if (!dateStr.match(/^\d\d-\d\d$/)
         && !dateStr.match(/^\d\d\d\d-\d\d-\d\d$/)) return;
@@ -208,20 +197,12 @@ async function sendSheetNoticeInner(opts: SendSeehtNoticeParms, steps: string[])
         moment(`${dateStr}`, 'MM-DD') :
         moment(`${dateStr}`, 'YYYY-MM-DD');
       if (!date.isValid()) return null;
-      const ret = columnNames.reduce((acc, who) => { 
-        const pos = addrToPos(who);
-        acc.row[pos] = d[pos];
-        return acc;
-      }, {
+      const ret = {
         date,
-        row: [] as string[]
-        //time: d[1],
-        //location: d[5],
-        //who: d[6],
-        //what: d[8],
-      });
+        row: cur       
+      };
       //if (ret[addrToPos('B')] !== '7:30-9:30pm') return null;
-      if ((ret.row[addrToPos('L')] || '').trim().toLowerCase() !== 'yes') return null;
+      if ((ret.row['Send Notice'] || '').trim().toLowerCase() !== 'yes') return null;
       return ret;
     }).filter(x => x);
   });

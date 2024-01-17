@@ -1,3 +1,4 @@
 call node_modules\.bin\tsc
 set REFRESH_TOKEN=
-call node dist\refreshEEVisitLog\lib\test
+rem call node dist\refreshEEVisitLog\lib\test
+call node dist\test
