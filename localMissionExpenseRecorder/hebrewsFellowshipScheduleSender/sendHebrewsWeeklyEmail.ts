@@ -98,7 +98,10 @@ type ScheduleData = {
 function getLookupOwner(owner:string) {
   const churchNumber = owner.match(/(教会){0,1}(?<number>\d+)(教室){0,1}/)?.groups?.number;
   const lookupOwnerName = churchNumber ? '教会' : owner;
-  const displayOwnerHomeName = churchNumber ? `教会${churchNumber}教室` : `${owner}家`;
+  let displayOwnerHomeName = churchNumber ? `教会${churchNumber}教室` : `${owner}家`;
+  if (owner.toUpperCase() === 'ACCCN') {
+    displayOwnerHomeName = 'ACCCN';
+  }
   return {
     lookupOwnerName,
     displayOwnerHomeName,
