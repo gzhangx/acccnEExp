@@ -173,11 +173,11 @@ function prepareExpenseSheet(found:ILocalCats,payeeName: string, amount: string,
     row = 50;
     data[row][0] = replaceStrUnderlines(data[row][0], desc || '');
     row = 51;
-    data[row][0] = replaceStrUnderlines(data[row][0], 'Guangseng');
+    data[row][0] = replaceStrUnderlines(data[row][0], 'Guangsen');
     const submitDatePos = 7;
     data[row][submitDatePos] = replaceStrUnderlines(data[row][submitDatePos], date);
     row = 53;
-    data[row][0] = replaceStrUnderlines(data[row][0], 'Guangseng');
+    data[row][0] = replaceStrUnderlines(data[row][0], 'Guangsen');
     data[row][submitDatePos] = replaceStrUnderlines(data[row][submitDatePos], date);
     return foundReplacement;
 }
