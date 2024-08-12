@@ -3,6 +3,8 @@ import { ILogger } from "@gzhangx/googleapi/lib/msGraph/msauth";
 import * as bibleSender from './bibleSender/getdata';
 import * as hebrewsSender from './hebrewsFellowshipScheduleSender/sendHebrewsWeeklyEmail';
 
+import { sendBTAData } from '../refreshEEVisitLog/lib/btaEmail';
+
 import { submitFile, getCategories, updateSums, getUserToCategories } from '../refreshEEVisitLog/lib/localMissionFile'
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
     context.log('HTTP trigger function processed a request.');
@@ -97,6 +99,12 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         })
     } else if (action === 'updateSums') {
         res = await updateSums(context.log)
+    } else if (action === 'sendBettinaEmail') {
+        res = await sendBTAData({
+            date: new Date(),
+            logger: context.log,
+        })
+        res = 'bemail';
     } else {
         res = {
             message:'bad action'
