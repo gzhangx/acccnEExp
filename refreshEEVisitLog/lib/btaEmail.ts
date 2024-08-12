@@ -8,6 +8,12 @@ export type BtaDataOpts = {
 }
 export async function sendBTAData(opts: BtaDataOpts) {
     const nowInput = Moment(opts.date);
+    if (!process.env.BTA_EMAIL) {
+        return {
+            err: 'must set process.env.BTA_EMAIL',
+            message: 'must set process.env.BTA_EMAIL',
+        }
+    }
     // 0 Sunday, 1 mon, 2 tu, 3 wed 4 thu 5-Fri   6-sat
     const saturdayMMDDYYYY = nowInput.weekday(6).format('MM/DD/YYYY');
     const thursdayMMDDYYYY = nowInput.weekday(4).format('MM/DD/YYYY');
