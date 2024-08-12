@@ -104,7 +104,6 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             date: new Date(),
             logger: context.log,
         })
-        res = 'bemail';
     } else {
         res = {
             message:'bad action'

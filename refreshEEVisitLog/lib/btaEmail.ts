@@ -18,7 +18,7 @@ export async function sendBTAData(opts: BtaDataOpts) {
     const saturdayMMDDYYYY = nowInput.weekday(6).format('MM/DD/YYYY');
     const thursdayMMDDYYYY = nowInput.weekday(4).format('MM/DD/YYYY');
     const message = {
-        from: `"Hebrews Daily Bible verse" <${emailUser}>`,
+        from: `"Open Arms Saturday event Auto reminder" <${emailUser}>`,
         to: [process.env.BTA_EMAIL],
         subject: 'weekly opr email , ' + nowInput.format('YYYY-MM-DD'),
         text: `Open Arms Saturday event:
