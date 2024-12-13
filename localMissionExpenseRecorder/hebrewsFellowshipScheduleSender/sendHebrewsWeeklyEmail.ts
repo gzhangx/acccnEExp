@@ -136,6 +136,7 @@ function createMessage2021(templateAll: TemplateData, first: ScheduleData, have:
   first.row['address'] = lookupInfo ? lookupInfo : `Can't find address for ${lookupOwnerName}`;
   const additionalInformation = ownerLookup(lookupOwnerName, 'additionalInformation');
   first.row['additionalInformation'] = additionalInformation || '';
+  first.row['year'] = moment(dateVal).format('YYYY');
 
   const rpls = [
     (data: string) => data.replace(new RegExp('[$]{([^{}]+)}', 'gi'), (...m) => {    
