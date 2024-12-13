@@ -3,8 +3,9 @@ import moment from 'moment-timezone';
 import * as mailTool from '../bibleSender/nodemailer'
 import { flow, get, mapValues, keyBy } from 'lodash';
 import * as gsSheet from './gsSheet';
-async function readValues(range: string) {
-  const sheet = gsSheet.getOpsBySheetId('1uYTYzwjUN8tFpeejHtiGA5u_RtOoSBO8P1b2Qg-6Elk');
+import { LoggerType } from './gsSheet';
+async function readValues(range: string, logger: LoggerType) {
+  const sheet = gsSheet.getOpsBySheetId('1uYTYzwjUN8tFpeejHtiGA5u_RtOoSBO8P1b2Qg-6Elk', logger);
   const ops = await sheet.getOps();
   const ret = await ops.readData(range);
   return ret.data;
@@ -44,9 +45,9 @@ type TemplateData = {
   }
 }
 
-async function getTemplateData(curDate: Date): Promise<TemplateData> {
+async function getTemplateData(curDate: Date, logger: LoggerType): Promise<TemplateData> {
   //await sheet.readSheet(spreadsheetId,range);
-  const getRows = async range => (await readValues(range)).splice(1);
+  const getRows = async range => (await readValues(range, logger)).splice(1);
   
   const rows = await getRows('Addresses');  
   const names = keyBy(rows.map(r=>({name: r[0], address:r[1], additionalInformation:r[2]})).filter(x=>x.name), 'name');
@@ -150,11 +151,10 @@ function createMessage2021(templateAll: TemplateData, first: ScheduleData, have:
 }
 
 
-type Logger = (...args) => void;
 type SendSeehtNoticeParms = {
   curDateD?: Date;
   sendEmail?: 'Y' | 'N';
-  logger: Logger;  
+  logger: LoggerType;  
 }
 
 export async function sendSheetNotice(opts: SendSeehtNoticeParms) {
@@ -186,7 +186,7 @@ async function sendSheetNoticeInner(opts: SendSeehtNoticeParms, steps: string[])
   //  columnNames.push(String.fromCharCode(cnt));
   //}
 
-  const scheduleData = await readValues(`'${sheetName}'!${valuesRange[0]}:${valuesRange[1]}`).then(r => {    
+  const scheduleData = await readValues(`'${sheetName}'!${valuesRange[0]}:${valuesRange[1]}`, logInfo).then(r => {    
     const columnNames: string[] = r[1].map(r => r);
     return r.map(curRow => {
       const cur = columnNames.reduce((acc, name, i) => { 
@@ -229,7 +229,7 @@ async function sendSheetNoticeInner(opts: SendSeehtNoticeParms, steps: string[])
     subject: 'NA',
     text: 'NA',
   };
-  const template = await getTemplateData(opts.curDateD);
+  const template = await getTemplateData(opts.curDateD, logInfo);
   message.to = template.toAddrs.join(',');
   const messageData = createMessage2021(template, found, found.diff < 7 ? 'have' : 'havenot');
   Object.assign(message, messageData);

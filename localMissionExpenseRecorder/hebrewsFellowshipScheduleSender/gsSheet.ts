@@ -10,14 +10,15 @@ const clientCache ={
     ops: { [id: string]: gs.gsAccount.IGetSheetOpsReturn };
 };
 
-async function createOps(id: string) {
+export type LoggerType = (...arg: any[]) => void;
+async function createOps(id: string, logger: LoggerType) {
     if (!clientCache.client) {
         const gsKeyInfo: gs.gsAccount.IServiceAccountCreds = {
             client_email: process.env.GS_CLIENT_EMAIL,
             private_key: process.env.GS_PRIVATE_KEY,
             private_key_id: process.env.GS_PRIVATE_KEY_ID.replace(/\\n/g,'\n'),
         }; // = JSON.parse(fs.readFileSync('./data/secrets/gospelCamp.json').toString());
-        console.log('creating ops  for ', id, gsKeyInfo)
+        logger(`creating ops  for ${id}, ${JSON.stringify(gsKeyInfo, null, 2)}`)
         const client = gs.gsAccount.getClient(gsKeyInfo);        
         clientCache.client = client;        
     }
@@ -28,14 +29,14 @@ async function createOps(id: string) {
     return clientCache.ops[id];
 }
 
-async function readDataByColumnName(id: string, name: string) {
-    const ops = await createOps(id);
+async function readDataByColumnName(id: string, name: string, logger: LoggerType) {
+    const ops = await createOps(id, logger);
     return ops.readDataByColumnName(name);
 }
 
-export function getOpsBySheetId(id: string) {
+export function getOpsBySheetId(id: string, logger: LoggerType) {
     return {        
-        readDataByColumnName: (name) => readDataByColumnName(id, name),        
-        getOps: () => createOps(id),        
+        readDataByColumnName: (name) => readDataByColumnName(id, name, logger),        
+        getOps: () => createOps(id, logger),        
     }
 }
