@@ -18,7 +18,7 @@ async function createOps(id: string, logger: LoggerType) {
             private_key: process.env.GS_PRIVATE_KEY,
             private_key_id: process.env.GS_PRIVATE_KEY_ID.replace(/\\n/g,'\n'),
         }; // = JSON.parse(fs.readFileSync('./data/secrets/gospelCamp.json').toString());
-        logger(`creating ops  for ${id}, ${JSON.stringify(gsKeyInfo, null, 2).substring(0,100)}  ${process.env.GS_PRIVATE_KEY_ID.substring(0,100)}`)
+        logger(`creating ops  for ${id}, ${JSON.stringify(gsKeyInfo, null, 2).substring(0,500)}  ${process.env.GS_PRIVATE_KEY_ID.substring(0,500)}`)
         const client = gs.gsAccount.getClient(gsKeyInfo);        
         clientCache.client = client;        
     }
