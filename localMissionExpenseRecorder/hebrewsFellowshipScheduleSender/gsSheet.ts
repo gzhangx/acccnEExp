@@ -15,8 +15,9 @@ async function createOps(id: string) {
         const gsKeyInfo: gs.gsAccount.IServiceAccountCreds = {
             client_email: process.env.GS_CLIENT_EMAIL,
             private_key: process.env.GS_PRIVATE_KEY,
-            private_key_id: process.env.GS_PRIVATE_KEY_ID.replace(/\\n/g,''),
+            private_key_id: process.env.GS_PRIVATE_KEY_ID.replace(/\\n/g,'\n'),
         }; // = JSON.parse(fs.readFileSync('./data/secrets/gospelCamp.json').toString());
+        console.log('creating ops  for ', id, gsKeyInfo)
         const client = gs.gsAccount.getClient(gsKeyInfo);        
         clientCache.client = client;        
     }
