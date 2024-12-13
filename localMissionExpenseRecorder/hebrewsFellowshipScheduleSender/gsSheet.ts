@@ -1,5 +1,6 @@
 import *as gs from '@gzhangx/googleapi';
-import gsKeyInfo from './data/secrets/gospelCamp.json'
+//import gsKeyInfo from './data/secrets/gospelCamp.json'
+import * as fs from 'fs';
 
 const clientCache ={
     client: null,
@@ -11,6 +12,7 @@ const clientCache ={
 
 async function createOps(id: string) {
     if (!clientCache.client) {
+        const gsKeyInfo = JSON.parse(fs.readFileSync('./data/secrets/gospelCamp.json').toString());
         const client = gs.gsAccount.getClient(gsKeyInfo);        
         clientCache.client = client;        
     }
