@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es6",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "target": "ES2022",
     "outDir": "dist",
     "rootDir": ".",
-    "sourceMap": true,
-    "resolveJsonModule": true,    
+    "sourceMap": true,   
     "esModuleInterop": true,
     "strict": false    
   }
