@@ -12,7 +12,11 @@ const clientCache ={
 
 async function createOps(id: string) {
     if (!clientCache.client) {
-        const gsKeyInfo = JSON.parse(fs.readFileSync('./data/secrets/gospelCamp.json').toString());
+        const gsKeyInfo: gs.gsAccount.IServiceAccountCreds = {
+            client_email: process.env.GS_CLIENT_EMAIL,
+            private_key: process.env.GS_PRIVATE_KEY,
+            private_key_id: process.env.GS_PRIVATE_KEY_ID.replace(/\\n/g,''),
+        }; // = JSON.parse(fs.readFileSync('./data/secrets/gospelCamp.json').toString());
         const client = gs.gsAccount.getClient(gsKeyInfo);        
         clientCache.client = client;        
     }
