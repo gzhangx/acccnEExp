@@ -28,7 +28,7 @@ async function createOps(id: string, logger: LoggerType) {
         private_key_id: process.env.GS_PRIVATE_KEY_ID.replace(/\\n/g, '\n'),
     }; // = JSON.parse(fs.readFileSync('./data/secrets/gospelCamp.json').toString());
     logger(`creating ops  for ${id}, ${JSON.stringify(gsKeyInfo, null, 2).substring(0, 500)}  \norig=${process.env.GS_PRIVATE_KEY.substring(0, 500)}
-    replaced=${gsKeyInfo.private_key}`);
+    replaced=${gsKeyInfo.private_key.substring(0,500)}`);
     if (!clientCache.ops[id]) {
         const ops = await clientCache.client.getSheetOps(id);
         clientCache.ops[id] = ops;
