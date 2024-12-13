@@ -185,7 +185,7 @@ async function sendSheetNoticeInner(opts: SendSeehtNoticeParms, steps: string[])
   //for (let cnt = valuesRange[0].charCodeAt(0); cnt <= valuesRange[1].charCodeAt(0); cnt++) {
   //  columnNames.push(String.fromCharCode(cnt));
   //}
-
+  logInfo(`${sheetName} ${curDate.format('YYYY-MM-DD')} sendEmail=${opts.sendEmail} here`);
   const scheduleData = await readValues(`'${sheetName}'!${valuesRange[0]}:${valuesRange[1]}`, logInfo).then(r => {    
     const columnNames: string[] = r[1].map(r => r);
     return r.map(curRow => {
