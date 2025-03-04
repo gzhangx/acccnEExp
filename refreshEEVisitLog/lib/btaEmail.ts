@@ -47,9 +47,9 @@ export async function sendBTAData(opts: BtaDataOpts) {
 
     const message = {
         from: `"Open Arms Saturday event Auto reminder" <${emailUser}>`,
-        to: [process.env.BTA_EMAIL],
-        subject: template[0], // 'weekly opr email , ' + nowInput.format('YYYY-MM-DD'),
-        text: template[1] || `Open Arms Saturday event:
+        to: template[0].split(','),
+        subject: template[1], // 'weekly opr email , ' + nowInput.format('YYYY-MM-DD'),
+        text: template[2] || `Open Arms Saturday event:
 School has started and we will be back to our normal Saturday event at true love daycare center.
 Please confirm this Saturday （${saturdayMMDDYYYY}) event by Thursday (${thursdayMMDDYYYY})
 
