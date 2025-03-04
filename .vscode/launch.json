@@ -24,6 +24,14 @@
       "type": "node",
       "request": "launch",
       "name": "Run test.ts",
+      "env": {
+        "BTA_EMAIL":"cute",
+        "SMTP_USER":"local",
+        "SMTP_PASS":"B",
+        "GS_CLIENT_EMAIL":"gospel-comp-register@",
+        "GS_PRIVATE_KEY":"-----BEGIN PRIVATE KEY-----\n",
+        "GS_PRIVATE_KEY_ID":"f7badca78bcfe506a1bfb"
+      },
       "skipFiles": [
         "<node_internals>/**"
       ],

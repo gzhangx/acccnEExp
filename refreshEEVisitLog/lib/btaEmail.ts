@@ -1,12 +1,34 @@
 
+
 import { emailTransporter, emailUser } from './nodemailer';
 import Moment from 'moment-timezone';
+import *as gs from '@gzhangx/googleapi';
+export type LoggerType = (...arg: any[]) => void;
+async function createOps() {
+    const gsKeyInfo: gs.gsAccount.IServiceAccountCreds = {
+        client_email: process.env.GS_CLIENT_EMAIL,
+        private_key: process.env.GS_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        private_key_id: process.env.GS_PRIVATE_KEY_ID,
+    }; // = JSON.parse(fs.readFileSync('./data/secrets/gospelCamp.json').toString());    
+    const client = gs.gsAccount.getClient(gsKeyInfo);
+    return client;
+}
+async function readValues() {
+    const client = await createOps();
+    const ops = await client.getSheetOps("1qgGpKDF5blPj8c-pFDhz7VkT1tvyllkT5rl4s4I0Dd0");
+  //const sheet = gsSheet.getOpsBySheetId('1uYTYzwjUN8tFpeejHtiGA5u_RtOoSBO8P1b2Qg-6Elk', logger);
+  //const ops = await sheet.getOps();
+    const ret = await ops.readData('EmailTemplate');
+  return ret.data;
+}
+
 
 export type BtaDataOpts = {
     date: Date;
     logger: (str: string, err: object) => void;
 }
 export async function sendBTAData(opts: BtaDataOpts) {
+    const templates = await readValues();
     const nowInput = Moment(opts.date);
     if (!process.env.BTA_EMAIL) {
         return {
@@ -17,11 +39,17 @@ export async function sendBTAData(opts: BtaDataOpts) {
     // 0 Sunday, 1 mon, 2 tu, 3 wed 4 thu 5-Fri   6-sat
     const saturdayMMDDYYYY = nowInput.weekday(6).format('MM/DD/YYYY');
     const thursdayMMDDYYYY = nowInput.weekday(4).format('MM/DD/YYYY');
+    const date = nowInput.format('YYYY-MM-DD');
+    const template = templates.map(text => {
+        return text[0].replace(/\$Date/g, date).replace(/\$Saturday/g, saturdayMMDDYYYY)
+            .replace(/\$Thursday/g, thursdayMMDDYYYY);
+    })
+
     const message = {
         from: `"Open Arms Saturday event Auto reminder" <${emailUser}>`,
         to: [process.env.BTA_EMAIL],
-        subject: 'weekly opr email , ' + nowInput.format('YYYY-MM-DD'),
-        text: `Open Arms Saturday event:
+        subject: template[0], // 'weekly opr email , ' + nowInput.format('YYYY-MM-DD'),
+        text: template[1] || `Open Arms Saturday event:
 School has started and we will be back to our normal Saturday event at true love daycare center.
 Please confirm this Saturday （${saturdayMMDDYYYY}) event by Thursday (${thursdayMMDDYYYY})
 
