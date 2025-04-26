@@ -13,13 +13,14 @@ async function createOps() {
     const client = gs.gsAccount.getClient(gsKeyInfo);
     return client;
 }
-async function readValues() {
+async function readValues(): Promise<string[][]> {
     const client = await createOps();
     const ops = await client.getSheetOps("1qgGpKDF5blPj8c-pFDhz7VkT1tvyllkT5rl4s4I0Dd0");
   //const sheet = gsSheet.getOpsBySheetId('1uYTYzwjUN8tFpeejHtiGA5u_RtOoSBO8P1b2Qg-6Elk', logger);
   //const ops = await sheet.getOps();
     const ret = await ops.readData('EmailTemplate');
-  return ret.data;
+    //return ret.data;
+    return ret.values;
 }
 
 

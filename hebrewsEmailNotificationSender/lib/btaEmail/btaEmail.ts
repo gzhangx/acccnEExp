@@ -19,7 +19,8 @@ async function readValues() {
   //const sheet = gsSheet.getOpsBySheetId('1uYTYzwjUN8tFpeejHtiGA5u_RtOoSBO8P1b2Qg-6Elk', logger);
   //const ops = await sheet.getOps();
     const ret = await ops.readData('EmailTemplate');
-  return ret.data;
+    //return ret.data;
+    return ret.values;
 }
 
 

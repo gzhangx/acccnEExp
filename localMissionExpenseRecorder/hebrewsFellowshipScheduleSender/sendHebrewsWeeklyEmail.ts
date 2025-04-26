@@ -8,7 +8,8 @@ async function readValues(range: string, logger: LoggerType) {
   const sheet = gsSheet.getOpsBySheetId('1uYTYzwjUN8tFpeejHtiGA5u_RtOoSBO8P1b2Qg-6Elk', logger);
   const ops = await sheet.getOps();
   const ret = await ops.readData(range);
-  return ret.data;
+  //return ret.data;
+  return ret.values;
 }
 
 const addrToPos = (x:string) => x.charCodeAt(0) - 65;

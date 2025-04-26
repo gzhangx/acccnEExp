@@ -1,5 +1,6 @@
 import * as dailySender from './localMissionExpenseRecorder/bibleSender/getdata'
-import * as sendWeek from './localMissionExpenseRecorder/hebrewsFellowshipScheduleSender/sendHebrewsWeeklyEmail'
+//import * as sendWeek from './localMissionExpenseRecorder/hebrewsFellowshipScheduleSender/sendHebrewsWeeklyEmail'
+import * as sendWeek from './hebrewsEmailNotificationSender/lib/hebrewsFellowshipScheduleSender/sendHebrewsWeeklyEmail'
 import { sendBTAData } from './refreshEEVisitLog/lib/btaEmail';
 async function test(retFirst: string) {
 

@@ -1,14 +1,16 @@
 
 import moment from 'moment-timezone';
 import * as mailTool from '../bibleSender/nodemailer'
-import { flow, get, mapValues, keyBy } from 'lodash';
+import * as lodash from 'lodash';
+const { flow, get, mapValues, keyBy } = lodash;
 import * as gsSheet from './gsSheet';
 import { LoggerType } from './gsSheet';
 async function readValues(range: string, logger: LoggerType) {
   const sheet = gsSheet.getOpsBySheetId('1uYTYzwjUN8tFpeejHtiGA5u_RtOoSBO8P1b2Qg-6Elk', logger);
   const ops = await sheet.getOps();
   const ret = await ops.readData(range);
-  return ret.data;
+  //return ret.data;
+  return ret.values;
 }
 
 const addrToPos = (x:string) => x.charCodeAt(0) - 65;

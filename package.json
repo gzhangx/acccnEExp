@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@gzhangx/googleapi": "^0.0.80",
+    "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.43",
     "nodemailer": "^6.10.1",
@@ -19,7 +20,7 @@
   },
   "devDependencies": {
     "@azure/functions": "^3.0.0",
-    "@types/lodash": "^4.14.197",        
+    "@types/lodash": "^4.14.197",
     "@types/node": "^22.9.1",
     "@types/nodemailer": "^6.4.4",
     "@types/uuid": "^9.0.0",
