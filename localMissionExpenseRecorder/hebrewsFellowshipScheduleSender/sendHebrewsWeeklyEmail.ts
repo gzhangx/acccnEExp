@@ -1,4 +1,4 @@
-
+// Warning, moved to hebrewsEmailNotificationSender.ts
 import moment from 'moment-timezone';
 import * as mailTool from '../bibleSender/nodemailer'
 import { flow, get, mapValues, keyBy } from 'lodash';

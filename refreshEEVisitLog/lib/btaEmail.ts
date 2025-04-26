@@ -1,4 +1,4 @@
-
+// Warning, moved to hebrewsEmailNotificationSender.ts
 
 import { emailTransporter, emailUser } from './nodemailer';
 import Moment from 'moment-timezone';

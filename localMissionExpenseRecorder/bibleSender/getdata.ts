@@ -1,4 +1,5 @@
-﻿'use strict';
+﻿// Warning, moved to hebrewsEmailNotificationSender.ts
+'use strict';
 
 import * as moment from 'moment-timezone';
 
