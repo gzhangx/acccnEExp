@@ -29,4 +29,4 @@ async function test(retFirst: string) {
     console.log(got);
 }
 
-test('sendBtaEmail');
+test('sendSheetNotice');
