@@ -18,8 +18,7 @@
     "nodemailer": "^7.0.10",
     "uuid": "^9.0.0"
   },
-  "devDependencies": {
-    "@azure/functions": "^3.0.0",
+  "devDependencies": {    
     "@types/lodash": "^4.14.197",
     "@types/node": "^22.9.1",
     "@types/nodemailer": "^7.0.3",

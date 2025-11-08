@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 const jscfg = JSON.parse(fs.readFileSync('./.vscode/launch.json', 'utf8'));
-        const envObj = jscfg.configurations.find(c => c.name === 'Run root test.ts').env
+        const envObj = jscfg.configurations.find((c: { name: string; }) => c.name === 'Run root test.ts').env
         Object.keys(envObj).forEach(k => {
             process.env[k] = envObj[k];
         });
@@ -13,7 +13,7 @@ import { env } from 'process';
 async function test(retFirst: string) {
 
     if (retFirst === "sendBtaEmail") {        
-        const logger = msg => console.log(msg);
+        const logger = (msg: any) => console.log(msg);
         
         //newGuestRegTest();
         
