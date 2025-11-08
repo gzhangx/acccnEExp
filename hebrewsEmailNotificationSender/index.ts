@@ -1,9 +1,10 @@
+/*
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import { ILogger } from "@gzhangx/googleapi/lib/msGraph/msauth";
 
 import * as bibleSender from './lib/bibleSender/getdata';
 import * as hebrewsSender from './lib/hebrewsFellowshipScheduleSender/sendHebrewsWeeklyEmail';
-import { sendBTAData } from '../refreshEEVisitLog/lib/btaEmail';
+import { sendBTAData } from './lib/btaEmail/btaEmail';
 
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
     context.log('HTTP trigger function processed a request.');
@@ -51,10 +52,11 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
         }
     }
     context.res = {
-        // status: 200, /* Defaults to 200 */
+        // status: 200, 
         body: res,
     };
     
 };
 
 export default httpTrigger;
+*/

@@ -8,5 +8,13 @@
     "sourceMap": true,   
     "esModuleInterop": true,
     "strict": false    
-  }
+  },
+  "include": [
+    "hebrewsEmailNotificationSender/**/*"
+  ],
+  "exclude": [
+    "acccnGuestRegistration/**/*",
+    "localMissionExpenseRecorder/**/*",
+    "refreshEEVisitLog/**/*"
+  ]
 }
