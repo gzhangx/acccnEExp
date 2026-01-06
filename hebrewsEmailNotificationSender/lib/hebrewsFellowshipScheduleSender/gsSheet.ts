@@ -40,3 +40,14 @@ export function getOpsBySheetId(id: string, logger: LoggerType) {
         getOps: () => createOps(id, logger),        
     }
 }
+
+
+export function creatOptsFromEnv() {    
+    const gsKeyInfo: gs.gsAccount.IServiceAccountCreds = {
+        client_email: process.env.GS_CLIENT_EMAIL,
+        private_key: process.env.GS_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        private_key_id: process.env.GS_PRIVATE_KEY_ID,
+    }; // = JSON.parse(fs.readFileSync('./data/secrets/gospelCamp.json').toString());    
+    const client = gs.gsAccount.getClient(gsKeyInfo);
+    return client;
+}
