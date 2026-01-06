@@ -98,9 +98,9 @@ async function populateChurchEvent() {
         });
     }
     console.log(allData);
-    await hops.append('北堂2026年历',allData)
+    await hops.append('北堂2026年历',allData.filter(d=>d[4].includes('預查')));
 }
 
-//test('sendSheetNotice');
+test('sendSheetNotice');
 
-populateChurchEvent();
+//populateChurchEvent();
