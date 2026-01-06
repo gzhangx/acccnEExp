@@ -10,6 +10,7 @@ import * as sendWeek from './hebrewsEmailNotificationSender/lib/hebrewsFellowshi
 import { sendBTAData } from './refreshEEVisitLog/lib/btaEmail';
 
 import { env } from 'process';
+console.log('process.env.GS_CLIENT_EMAIL at start',process.env.GS_CLIENT_EMAIL);
 async function test(retFirst: string) {
 
     if (retFirst === "sendBtaEmail") {        
@@ -28,7 +29,7 @@ async function test(retFirst: string) {
         
         const test = await sendWeek.sendSheetNotice({
             logger: console.log,
-            sendEmail: 'Y',
+            sendEmail: 'N',
         });
         return console.log(test);
     }

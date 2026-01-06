@@ -10,7 +10,8 @@
     "strict": false    
   },
   "include": [
-    "hebrewsEmailNotificationSender/**/*"
+    "hebrewsEmailNotificationSender/**/*",
+    "test.ts"
   ],
   "exclude": [
     "acccnGuestRegistration/**/*",
