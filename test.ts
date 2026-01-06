@@ -9,8 +9,7 @@ import * as dailySender from './localMissionExpenseRecorder/bibleSender/getdata'
 import * as sendWeek from './hebrewsEmailNotificationSender/lib/hebrewsFellowshipScheduleSender/sendHebrewsWeeklyEmail'
 import { sendBTAData } from './refreshEEVisitLog/lib/btaEmail';
 
-import { env } from 'process';
-console.log('process.env.GS_CLIENT_EMAIL at start',process.env.GS_CLIENT_EMAIL);
+
 async function test(retFirst: string) {
 
     if (retFirst === "sendBtaEmail") {        
