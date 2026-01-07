@@ -29,7 +29,7 @@ async function test(retFirst: string) {
         
         const test = await sendWeek.sendSheetNotice({
             logger: console.log,
-            sendEmail: 'N',
+            sendEmail: 'Y',
         });
         return console.log(test);
     }
