@@ -1,15 +1,16 @@
+import { loadEnvFromLaunchConfig } from './hebrewsEmailNotificationSender/lib/hebrewsFellowshipScheduleSender/eng_util';
+loadEnvFromLaunchConfig();
 import * as fs from 'fs';
 
 import * as dailySender from './localMissionExpenseRecorder/bibleSender/getdata'
 //import * as sendWeek from './localMissionExpenseRecorder/hebrewsFellowshipScheduleSender/sendHebrewsWeeklyEmail'
 import * as sendWeek from './hebrewsEmailNotificationSender/lib/hebrewsFellowshipScheduleSender/sendHebrewsWeeklyEmail'
 import { sendBTAData } from './refreshEEVisitLog/lib/btaEmail';
-import { loadEnvFromLaunchConfig } from './hebrewsEmailNotificationSender/lib/hebrewsFellowshipScheduleSender/eng_util';
 import moment from 'moment';
 import * as gs from '@gzhangx/googleapi'
 import { sum } from 'lodash';
 import { creatOptsFromEnv } from './hebrewsEmailNotificationSender/lib/hebrewsFellowshipScheduleSender/gsSheet';
-loadEnvFromLaunchConfig();
+
 
 async function test(retFirst: string) {
 
