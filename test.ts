@@ -8,7 +8,7 @@ import * as sendWeek from './hebrewsEmailNotificationSender/lib/hebrewsFellowshi
 import { sendBTAData } from './refreshEEVisitLog/lib/btaEmail';
 import moment from 'moment';
 import * as gs from '@gzhangx/googleapi'
-import { sum } from 'lodash';
+import { sum, orderBy, uniqWith, isEqual } from 'lodash';
 import { creatOptsFromEnv } from './hebrewsEmailNotificationSender/lib/hebrewsFellowshipScheduleSender/gsSheet';
 
 
@@ -99,9 +99,38 @@ async function populateChurchEvent() {
         });
     }
     console.log(allData);
-    await hops.append('北堂2026年历',allData.filter(d=>d[4].includes('預查')));
+    const allDataSorted = orderBy(allData as string[][], [d=>d[0]], ['asc']);
+    const uniqueData = uniqWith(allDataSorted, isEqual) as string[][];
+
+    const allBiblePrepars = uniqueData.filter(d => d[4].includes('預查'));
+    await hops.append('北堂2026年历', allBiblePrepars);
+    return {
+        hops,
+        allBiblePrepars,
+    };
 }
 
-test('sendSheetNotice');
 
-//populateChurchEvent();
+async function combineChurchEvent() {
+    const { hops, allBiblePrepars } = await populateChurchEvent();
+    const scheduleSheetName = `${new Date().getFullYear()}行事历`;
+    console.log(`reading sheet ${scheduleSheetName}`);
+    const fellowshipScheduleDataVal = await hops.readData(scheduleSheetName);
+    const churchSchedule = allBiblePrepars.map(row => {
+        return [
+            row[0], //date
+            row[2], //time
+            'church',
+            'church',
+            row[3], //what
+            'N',
+        ];
+    });
+
+    const fellowshipScheduleData = fellowshipScheduleDataVal.values as string[][];
+
+
+}
+//test('sendSheetNotice');
+
+combineChurchEvent();
