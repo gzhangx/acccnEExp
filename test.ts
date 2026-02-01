@@ -171,6 +171,7 @@ async function combineChurchEvent() {
     await hops.append('temp', result);
     return result;
 }
-//test('sendSheetNotice');
 
-combineChurchEvent();
+test('sendSheetNotice');
+
+//combineChurchEvent();
