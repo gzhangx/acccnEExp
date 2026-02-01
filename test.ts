@@ -119,7 +119,7 @@ async function combineChurchEvent() {
     const churchSchedule = allBiblePrepars.map(row => {
         return [
             row[0], //date
-            row[2], //time
+            row[2].replace(/ /g, ''), //time
             'church',
             'church',
             row[3], //what
@@ -129,7 +129,47 @@ async function combineChurchEvent() {
 
     const fellowshipScheduleData = fellowshipScheduleDataVal.values as string[][];
 
+    // Sort all church items (fellowship is already sorted)
+    const sortedChurchItems = orderBy(churchSchedule, [row => row[0]], ['asc']);
+    
+    const result: string[][] = [];
+    
+    // Keep first 2 rows as headers
+    result.push(fellowshipScheduleData[0]);
+    result.push(fellowshipScheduleData[1]);
+    
+    let churchIndex = 0;
+    
+    // Merge church items into fellowship schedule (both are sorted)
+    for (let i = 2; i < fellowshipScheduleData.length; i++) {
+        const fellowshipRow = fellowshipScheduleData[i];
+        const fellowshipDate = fellowshipRow[0];
+        
+        // Insert church items that come before this fellowship row
+        while (churchIndex < sortedChurchItems.length && 
+               fellowshipDate && 
+               sortedChurchItems[churchIndex][0] < fellowshipDate) {
+            result.push(['', '', '', '', '', '']);
+            result.push(sortedChurchItems[churchIndex]);
+            result.push(['', '', '', '', '', '']);
+            churchIndex++;
+        }
+        
+        // Add fellowship row (preserves all original structure including empty rows)
+        result.push(fellowshipRow);
+    }
+    
+    // Add remaining church items
+    while (churchIndex < sortedChurchItems.length) {
+        result.push(['', '', '', '', '', '']);
+        result.push(sortedChurchItems[churchIndex]);
+        result.push(['', '', '', '', '', '']);
+        churchIndex++;
+    }
 
+    await hops.clear('temp')
+    await hops.append('temp', result);
+    return result;
 }
 //test('sendSheetNotice');
 
