@@ -12,7 +12,7 @@ import { sum, orderBy, uniqWith, isEqual } from 'lodash';
 import { creatOptsFromEnv } from './hebrewsEmailNotificationSender/lib/hebrewsFellowshipScheduleSender/gsSheet';
 
 
-async function test(retFirst: string) {
+async function test(retFirst: string = 'sendSheetNotice') {
 
     if (retFirst === "sendBtaEmail") {        
         const logger = (msg: any) => console.log(msg);
@@ -34,11 +34,13 @@ async function test(retFirst: string) {
         });
         return console.log(test);
     }
-    const got = await dailySender.sendBibleData({
-        logger: console.log,
-        sendEmail: 'N',
-    });
-    console.log(got);
+    if (retFirst === 'sendDaily') {
+        const got = await dailySender.sendBibleData({
+            logger: console.log,
+            sendEmail: 'N',
+        });
+        console.log(got);
+    }    
 }
 
 
@@ -172,6 +174,6 @@ async function combineChurchEvent() {
     return result;
 }
 
-test('sendSheetNotice');
+test(process.argv[2]);
 
 //combineChurchEvent();
