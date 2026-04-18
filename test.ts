@@ -37,7 +37,7 @@ async function test(retFirst: string = 'sendSheetNotice') {
     if (retFirst === 'sendDaily') {
         const got = await dailySender.sendBibleData({
             logger: console.log,
-            sendEmail: 'N',
+            sendEmail: 'Y',
         });
         console.log(got);
     }    
